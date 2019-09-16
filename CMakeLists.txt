@@ -13,6 +13,7 @@ find_package(OpenGL QUIET)
 find_package(X11 QUIET)
 find_package(Vulkan QUIET)
 
+
 if( CMAKE_BUILD_TYPE STREQUAL "Debug" )
     set(DAWN_ENABLE_ASSERTS ON)
 else()
@@ -33,13 +34,13 @@ option(GLFW_BUILD_TESTS "Build the GLFW test programs" OFF)
 option(GLFW_BUILD_DOCS "Build the GLFW documentation" OFF)
 option(GLFW_INSTALL "Generate installation target" OFF)
 
-add_subdirectory(dawn/third_party/glslang)
-add_subdirectory(dawn/third_party/spirv-headers)
-add_subdirectory(dawn/third_party/SPIRV-Tools)
-add_subdirectory(dawn/third_party/spirv-cross)
-add_subdirectory(dawn/third_party/shaderc)
+add_subdirectory(third_party/glslang)
+add_subdirectory(third_party/spirv-headers)
+add_subdirectory(third_party/SPIRV-Tools)
+add_subdirectory(third_party/spirv-cross)
+add_subdirectory(third_party/shaderc)
 if(DAWN_BUILD_SAMPLES)
-    add_subdirectory(dawn/third_party/glfw)
+    add_subdirectory(third_party/glfw)
 endif()
 
 ################################################################################
@@ -546,7 +547,7 @@ if(DAWN_BUILD_SAMPLES)
 
     target_include_directories(${PROJECT_NAME}_sample_utils
         PUBLIC
-            ${PROJECT_SOURCE_DIR}/dawn/third_party/glm
+            ${PROJECT_SOURCE_DIR}/third_party/glm
             ${PROJECT_SOURCE_DIR}/dawn/src/
             ${PROJECT_BINARY_DIR}
     )
