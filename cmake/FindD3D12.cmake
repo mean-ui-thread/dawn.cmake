@@ -34,6 +34,11 @@ find_path(DXGI_INCLUDE_DIR    # Set variable DXGI_INCLUDE_DIR
           HINTS
           )
 
+if(D3D12_INCLUDE_DIR AND DXGI_INCLUDE_DIR)
+    set(D3D12_INCLUDE_DIRS ${D3D12_INCLUDE_DIR} ${DXGI_INCLUDE_DIR})
+endif()
+
+
 if(CMAKE_SIZEOF_VOID_P EQUAL 8)
     set(_arch x64)
 else()
@@ -49,9 +54,9 @@ find_library(DXGI_LIBRARY NAMES dxgi.lib
 find_library(DXGUID_LIBRARY NAMES dxguid.lib
              HINTS ${WIN10_SDK_PATH}/Lib/${WIN10_SDK_VERSION}/um/${_arch} )
 
-set(D3D12_LIBRARIES ${D3D12_LIBRARY} ${DXGI_LIBRARY} ${DXGUID_LIBRARY})
-set(D3D12_INCLUDE_DIRS ${D3D12_INCLUDE_DIR} ${DXGI_INCLUDE_DIR})
-
+if(D3D12_LIBRARY AND DXGI_LIBRARY AND DXGUID_LIBRARY)
+    set(D3D12_LIBRARIES ${D3D12_LIBRARY} ${DXGI_LIBRARY} ${DXGUID_LIBRARY})
+endif()
 
 include(FindPackageHandleStandardArgs)
 # handle the QUIETLY and REQUIRED arguments and set D3D12_FOUND to TRUE
