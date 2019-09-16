@@ -29,7 +29,7 @@ function(dawn_generator sources)
             ${IN_ARGS}
             --root-dir ${PROJECT_SOURCE_DIR}/dawn
             --template-dir ${PROJECT_SOURCE_DIR}/dawn/generator/templates
-            --jinja2-path ${PROJECT_SOURCE_DIR}/dawn/third_party/jinja2
+            --jinja2-path ${PROJECT_SOURCE_DIR}/third_party/jinja2
             --output-json-tarball ${_json_tarball}
             --depfile ${_json_tarball_depfile}
         OUTPUT
