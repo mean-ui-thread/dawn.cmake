@@ -15,7 +15,7 @@
 	url = https://chromium.googlesource.com/external/github.com/KhronosGroup/glslang
 [submodule "third_party/shaderc"]
 	path = third_party/shaderc
-	url = https://chromium.googlesource.com/external/github.com/KhronosGroup/shaderc
+	url = https://chromium.googlesource.com/external/github.com/google/shaderc
 [submodule "third_party/glfw"]
 	path = third_party/glfw
 	url = https://chromium.googlesource.com/external/github.com/glfw/glfw
