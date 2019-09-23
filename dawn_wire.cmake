@@ -19,17 +19,16 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-if(APPLE)
-    find_path(METAL_INCLUDE_DIR Metal/Metal.h)
-    find_library(METAL_FRAMEWORKS Metal)
+include_guard(GLOBAL)
 
-    if(METAL_FRAMEWORKS)
-        set(METAL_LIBRARIES "-framework Metal -framework QuartzCore -framework Cocoa.framework -framework IOKit.framework -framework IOSurface.framework")
-    endif()
-endif()
-
-include(FindPackageHandleStandardArgs)
-find_package_handle_standard_args(METAL  DEFAULT_MSG
-                                  METAL_INCLUDE_DIR METAL_LIBRARIES)
-
-mark_as_advanced(METAL_INCLUDE_DIR METAL_LIBRARIES)
+add_library(dawn_wire_headers INTERFACE)
+target_link_libraries(dawn_wire_headers INTERFACE
+    dawn_headers
+    dawn_public_include_dirs
+)
+target_sources(dawn_wire_headers INTERFACE
+    ${dawn_root}/src/include/dawn_wire/Wire.h
+    ${dawn_root}/src/include/dawn_wire/WireClient.h
+    ${dawn_root}/src/include/dawn_wire/WireServer.h
+    ${dawn_root}/src/include/dawn_wire/dawn_wire_export.h
+)
