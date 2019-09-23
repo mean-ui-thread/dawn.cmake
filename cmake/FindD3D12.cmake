@@ -1,3 +1,10 @@
+##
+# Taken from here
+#     https://github.com/microsoft/DirectXShaderCompiler/blob/master/cmake/modules/FindD3D12.cmake
+#
+# And slightly modified to make this work for this project.
+##
+
 # Find the win10 SDK path.
 if ("$ENV{WIN10_SDK_PATH}$ENV{WIN10_SDK_VERSION}" STREQUAL "" )
   get_filename_component(WIN10_SDK_PATH "[HKEY_LOCAL_MACHINE\\SOFTWARE\\WOW6432Node\\Microsoft\\Microsoft SDKs\\Windows\\v10.0;InstallationFolder]" ABSOLUTE CACHE)
@@ -38,10 +45,13 @@ if(D3D12_INCLUDE_DIR AND DXGI_INCLUDE_DIR)
     set(D3D12_INCLUDE_DIRS ${D3D12_INCLUDE_DIR} ${DXGI_INCLUDE_DIR})
 endif()
 
-
-if(CMAKE_SIZEOF_VOID_P EQUAL 8)
+if(CMAKE_SYSTEM_PROCESSOR MATCHES "^arm")
+    set(_arch arm)
+elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "^aarch64")
+    set(_arch arm64)
+elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "(x86_64)|(AMD64|amd64)")
     set(_arch x64)
-else()
+elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "^i.86$")
     set(_arch x86)
 endif()
 

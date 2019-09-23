@@ -1,21 +1,6 @@
 [submodule "dawn"]
 	path = dawn
 	url = https://dawn.googlesource.com/dawn
-[submodule "third_party/SPIRV-Cross"]
-	path = third_party/SPIRV-Cross
-	url = https://chromium.googlesource.com/external/github.com/KhronosGroup/SPIRV-Cross
-[submodule "third_party/SPIRV-Tools"]
-	path = third_party/SPIRV-Tools
-	url = https://chromium.googlesource.com/external/github.com/KhronosGroup/SPIRV-Tools
-[submodule "third_party/SPIRV-Headers"]
-	path = third_party/SPIRV-Headers
-	url = https://chromium.googlesource.com/external/github.com/KhronosGroup/SPIRV-Headers
-[submodule "third_party/glslang"]
-	path = third_party/glslang
-	url = https://chromium.googlesource.com/external/github.com/KhronosGroup/glslang
-[submodule "third_party/shaderc"]
-	path = third_party/shaderc
-	url = https://chromium.googlesource.com/external/github.com/google/shaderc
 [submodule "third_party/glfw"]
 	path = third_party/glfw
 	url = https://chromium.googlesource.com/external/github.com/glfw/glfw
@@ -28,3 +13,6 @@
 [submodule "third_party/markupsafe"]
 	path = third_party/markupsafe
 	url = https://chromium.googlesource.com/chromium/src/third_party/markupsafe
+[submodule "third_party/shaderc"]
+	path = third_party/shaderc
+	url = https://github.com/google/shaderc
