@@ -28,11 +28,14 @@ include_guard(GLOBAL)
 add_library(dawn_public_include_dirs INTERFACE)
 target_include_directories(dawn_public_include_dirs INTERFACE
     $<BUILD_INTERFACE:${dawn_root}/src/include>
-    $<BUILD_INTERFACE:${target_gen_dir}>
+    $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/src>
+    $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/src/include>
 )
 
 add_library(dawn_internal INTERFACE)
-target_include_directories(dawn_internal INTERFACE ${dawn_root}/src)
+target_include_directories(dawn_internal INTERFACE
+    $<BUILD_INTERFACE:${dawn_root}/src>
+)
 target_compile_definitions(dawn_internal INTERFACE
         $<$<BOOL:${DAWN_ENABLE_ASSERTS}>:DAWN_ENABLE_ASSERTS=1>
         $<$<BOOL:${DAWN_ENABLE_BACKEND_D3D12}>:DAWN_ENABLE_BACKEND_D3D12>

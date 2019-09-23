@@ -27,8 +27,10 @@ target_link_libraries(dawn_wire_headers INTERFACE
     dawn_public_include_dirs
 )
 target_sources(dawn_wire_headers INTERFACE
-    ${dawn_root}/src/include/dawn_wire/Wire.h
-    ${dawn_root}/src/include/dawn_wire/WireClient.h
-    ${dawn_root}/src/include/dawn_wire/WireServer.h
-    ${dawn_root}/src/include/dawn_wire/dawn_wire_export.h
+    $<BUILD_INTERFACE:
+        ${dawn_root}/src/include/dawn_wire/Wire.h
+        ${dawn_root}/src/include/dawn_wire/WireClient.h
+        ${dawn_root}/src/include/dawn_wire/WireServer.h
+        ${dawn_root}/src/include/dawn_wire/dawn_wire_export.h
+    >
 )

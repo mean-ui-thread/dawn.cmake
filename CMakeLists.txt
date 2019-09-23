@@ -20,6 +20,8 @@
 # SOFTWARE.
 
 cmake_minimum_required(VERSION 3.10)
+cmake_policy(SET CMP0076 OLD)
+
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -29,6 +31,8 @@ include(GNUInstallDirs)
 include(dawn_generator)
 
 project(dawn)
+
+set(OpenGL_GL_PREFERENCE GLVND)
 
 find_package(D3D12 QUIET)
 find_package(METAL QUIET)
@@ -51,7 +55,6 @@ option(DAWN_ENABLE_BACKEND_VULKAN "Enable Vulkan Backend" ${Vulkan_FOUND})
 option(DAWN_BUILD_SAMPLES "Builds Samples" ON)
 
 set(dawn_root ${PROJECT_SOURCE_DIR}/dawn)
-set(target_gen_dir ${PROJECT_BINARY_DIR})
 
 ################################################################################
 # Compiler flags
@@ -81,10 +84,12 @@ include(dawn_wire.cmake)
 add_library(dawn_platform INTERFACE)
 target_link_libraries(dawn_platform INTERFACE dawn_internal dawn_common)
 target_sources(dawn_platform INTERFACE
+    $<BUILD_INTERFACE:
         ${PROJECT_SOURCE_DIR}/dawn/src/include/dawn_platform/DawnPlatform.h
         ${PROJECT_SOURCE_DIR}/dawn/src/dawn_platform/tracing/EventTracer.cpp
         ${PROJECT_SOURCE_DIR}/dawn/src/dawn_platform/tracing/EventTracer.h
         ${PROJECT_SOURCE_DIR}/dawn/src/dawn_platform/tracing/TraceEvent.h
+    >
 )
 
 ###############################################################################
@@ -101,11 +106,11 @@ dawn_json_generator(dawn_native_utils_gen
     target
         dawn_native_utils
     outputs
-        ${PROJECT_BINARY_DIR}/dawn_native/ProcTable.cpp
-        ${PROJECT_BINARY_DIR}/dawn_native/dawn_structs_autogen.h
-        ${PROJECT_BINARY_DIR}/dawn_native/dawn_structs_autogen.cpp
-        ${PROJECT_BINARY_DIR}/dawn_native/ValidationUtils_autogen.h
-        ${PROJECT_BINARY_DIR}/dawn_native/ValidationUtils_autogen.cpp
+        ${PROJECT_BINARY_DIR}/src/dawn_native/ProcTable.cpp
+        ${PROJECT_BINARY_DIR}/src/dawn_native/dawn_structs_autogen.h
+        ${PROJECT_BINARY_DIR}/src/dawn_native/dawn_structs_autogen.cpp
+        ${PROJECT_BINARY_DIR}/src/dawn_native/ValidationUtils_autogen.h
+        ${PROJECT_BINARY_DIR}/src/dawn_native/ValidationUtils_autogen.cpp
 )
 
 if(DAWN_ENABLE_BACKEND_OPENGL)
@@ -116,9 +121,9 @@ if(DAWN_ENABLE_BACKEND_OPENGL)
             --gl-xml ${PROJECT_SOURCE_DIR}/dawn/third_party/khronos/gl.xml
             --supported-extensions ${PROJECT_SOURCE_DIR}/dawn/src/dawn_native/opengl/supported_extensions.json
         outputs
-            ${PROJECT_BINARY_DIR}/dawn_native/opengl/OpenGLFunctionsBase_autogen.cpp
-            ${PROJECT_BINARY_DIR}/dawn_native/opengl/OpenGLFunctionsBase_autogen.h
-            ${PROJECT_BINARY_DIR}/dawn_native/opengl/opengl_platform_autogen.h
+            ${PROJECT_BINARY_DIR}/src/dawn_native/opengl/OpenGLFunctionsBase_autogen.cpp
+            ${PROJECT_BINARY_DIR}/src/dawn_native/opengl/OpenGLFunctionsBase_autogen.h
+            ${PROJECT_BINARY_DIR}/src/dawn_native/opengl/opengl_platform_autogen.h
     )
 endif()
 
@@ -127,16 +132,18 @@ endif()
 add_library(dawn_native_headers INTERFACE)
 target_link_libraries(dawn_native_headers INTERFACE dawn_headers dawn_public_include_dirs)
 target_sources(dawn_native_headers INTERFACE
-    ${dawn_root}/src/include/dawn_native/DawnNative.h
-    ${dawn_root}/src/include/dawn_native/dawn_native_export.h
+    $<BUILD_INTERFACE:
+        ${dawn_root}/src/include/dawn_native/DawnNative.h
+        ${dawn_root}/src/include/dawn_native/dawn_native_export.h
 
-    # Include all backend's public headers so that dependencies can include
-    # them even when the backends are disabled.
-    ${dawn_root}/src/include/dawn_native/D3D12Backend.h
-    ${dawn_root}/src/include/dawn_native/MetalBackend.h
-    ${dawn_root}/src/include/dawn_native/NullBackend.h
-    ${dawn_root}/src/include/dawn_native/OpenGLBackend.h
-    ${dawn_root}/src/include/dawn_native/VulkanBackend.h
+        # Include all backend's public headers so that dependencies can include
+        # them even when the backends are disabled.
+        ${dawn_root}/src/include/dawn_native/D3D12Backend.h
+        ${dawn_root}/src/include/dawn_native/MetalBackend.h
+        ${dawn_root}/src/include/dawn_native/NullBackend.h
+        ${dawn_root}/src/include/dawn_native/OpenGLBackend.h
+        ${dawn_root}/src/include/dawn_native/VulkanBackend.h
+    >
 )
 
 # The meat of the compilation for dawn_native so that we can cheaply have
@@ -163,293 +170,313 @@ target_link_libraries(dawn_native_sources INTERFACE
 
 )
 target_sources(dawn_native_sources INTERFACE
-    ${dawn_root}/src/dawn_native/Adapter.cpp
-    ${dawn_root}/src/dawn_native/Adapter.h
-    ${dawn_root}/src/dawn_native/AttachmentState.cpp
-    ${dawn_root}/src/dawn_native/AttachmentState.h
-    ${dawn_root}/src/dawn_native/BackendConnection.cpp
-    ${dawn_root}/src/dawn_native/BackendConnection.h
-    ${dawn_root}/src/dawn_native/BindGroup.cpp
-    ${dawn_root}/src/dawn_native/BindGroup.h
-    ${dawn_root}/src/dawn_native/BindGroupLayout.cpp
-    ${dawn_root}/src/dawn_native/BindGroupLayout.h
-    ${dawn_root}/src/dawn_native/BuddyAllocator.cpp
-    ${dawn_root}/src/dawn_native/BuddyAllocator.h
-    ${dawn_root}/src/dawn_native/Buffer.cpp
-    ${dawn_root}/src/dawn_native/Buffer.h
-    ${dawn_root}/src/dawn_native/CommandAllocator.cpp
-    ${dawn_root}/src/dawn_native/CommandAllocator.h
-    ${dawn_root}/src/dawn_native/CommandBuffer.cpp
-    ${dawn_root}/src/dawn_native/CommandBuffer.h
-    ${dawn_root}/src/dawn_native/CommandBufferStateTracker.cpp
-    ${dawn_root}/src/dawn_native/CommandBufferStateTracker.h
-    ${dawn_root}/src/dawn_native/CommandEncoder.cpp
-    ${dawn_root}/src/dawn_native/CommandEncoder.h
-    ${dawn_root}/src/dawn_native/CommandValidation.cpp
-    ${dawn_root}/src/dawn_native/CommandValidation.h
-    ${dawn_root}/src/dawn_native/Commands.cpp
-    ${dawn_root}/src/dawn_native/Commands.h
-    ${dawn_root}/src/dawn_native/ComputePassEncoder.cpp
-    ${dawn_root}/src/dawn_native/ComputePassEncoder.h
-    ${dawn_root}/src/dawn_native/ComputePipeline.cpp
-    ${dawn_root}/src/dawn_native/ComputePipeline.h
-    ${dawn_root}/src/dawn_native/Device.cpp
-    ${dawn_root}/src/dawn_native/Device.h
-    ${dawn_root}/src/dawn_native/DynamicUploader.cpp
-    ${dawn_root}/src/dawn_native/DynamicUploader.h
-    ${dawn_root}/src/dawn_native/EncodingContext.cpp
-    ${dawn_root}/src/dawn_native/EncodingContext.h
-    ${dawn_root}/src/dawn_native/Error.cpp
-    ${dawn_root}/src/dawn_native/Error.h
-    ${dawn_root}/src/dawn_native/ErrorData.cpp
-    ${dawn_root}/src/dawn_native/ErrorData.h
-    ${dawn_root}/src/dawn_native/ErrorScope.cpp
-    ${dawn_root}/src/dawn_native/ErrorScope.h
-    ${dawn_root}/src/dawn_native/Extensions.cpp
-    ${dawn_root}/src/dawn_native/Extensions.h
-    ${dawn_root}/src/dawn_native/Fence.cpp
-    ${dawn_root}/src/dawn_native/Fence.h
-    ${dawn_root}/src/dawn_native/FenceSignalTracker.cpp
-    ${dawn_root}/src/dawn_native/FenceSignalTracker.h
-    ${dawn_root}/src/dawn_native/Format.cpp
-    ${dawn_root}/src/dawn_native/Format.h
-    ${dawn_root}/src/dawn_native/Forward.h
-    ${dawn_root}/src/dawn_native/Instance.cpp
-    ${dawn_root}/src/dawn_native/Instance.h
-    ${dawn_root}/src/dawn_native/ObjectBase.cpp
-    ${dawn_root}/src/dawn_native/ObjectBase.h
-    ${dawn_root}/src/dawn_native/PassResourceUsage.h
-    ${dawn_root}/src/dawn_native/PassResourceUsageTracker.cpp
-    ${dawn_root}/src/dawn_native/PassResourceUsageTracker.h
-    ${dawn_root}/src/dawn_native/PerStage.cpp
-    ${dawn_root}/src/dawn_native/PerStage.h
-    ${dawn_root}/src/dawn_native/Pipeline.cpp
-    ${dawn_root}/src/dawn_native/Pipeline.h
-    ${dawn_root}/src/dawn_native/PipelineLayout.cpp
-    ${dawn_root}/src/dawn_native/PipelineLayout.h
-    ${dawn_root}/src/dawn_native/ProgrammablePassEncoder.cpp
-    ${dawn_root}/src/dawn_native/ProgrammablePassEncoder.h
-    ${dawn_root}/src/dawn_native/Queue.cpp
-    ${dawn_root}/src/dawn_native/Queue.h
-    ${dawn_root}/src/dawn_native/RefCounted.cpp
-    ${dawn_root}/src/dawn_native/RefCounted.h
-    ${dawn_root}/src/dawn_native/RenderBundle.cpp
-    ${dawn_root}/src/dawn_native/RenderBundle.h
-    ${dawn_root}/src/dawn_native/RenderBundleEncoder.cpp
-    ${dawn_root}/src/dawn_native/RenderBundleEncoder.h
-    ${dawn_root}/src/dawn_native/RenderEncoderBase.cpp
-    ${dawn_root}/src/dawn_native/RenderEncoderBase.h
-    ${dawn_root}/src/dawn_native/RenderPassEncoder.cpp
-    ${dawn_root}/src/dawn_native/RenderPassEncoder.h
-    ${dawn_root}/src/dawn_native/RenderPipeline.cpp
-    ${dawn_root}/src/dawn_native/RenderPipeline.h
-    ${dawn_root}/src/dawn_native/ResourceHeap.h
-    ${dawn_root}/src/dawn_native/ResourceMemoryAllocation.cpp
-    ${dawn_root}/src/dawn_native/ResourceMemoryAllocation.h
-    ${dawn_root}/src/dawn_native/RingBuffer.cpp
-    ${dawn_root}/src/dawn_native/RingBuffer.h
-    ${dawn_root}/src/dawn_native/Sampler.cpp
-    ${dawn_root}/src/dawn_native/Sampler.h
-    ${dawn_root}/src/dawn_native/ShaderModule.cpp
-    ${dawn_root}/src/dawn_native/ShaderModule.h
-    ${dawn_root}/src/dawn_native/StagingBuffer.cpp
-    ${dawn_root}/src/dawn_native/StagingBuffer.h
-    ${dawn_root}/src/dawn_native/SwapChain.cpp
-    ${dawn_root}/src/dawn_native/SwapChain.h
-    ${dawn_root}/src/dawn_native/Texture.cpp
-    ${dawn_root}/src/dawn_native/Texture.h
-    ${dawn_root}/src/dawn_native/ToBackend.h
-    ${dawn_root}/src/dawn_native/Toggles.cpp
-    ${dawn_root}/src/dawn_native/Toggles.h
-    ${dawn_root}/src/dawn_native/dawn_platform.h
+    $<BUILD_INTERFACE:
+        ${dawn_root}/src/dawn_native/Adapter.cpp
+        ${dawn_root}/src/dawn_native/Adapter.h
+        ${dawn_root}/src/dawn_native/AttachmentState.cpp
+        ${dawn_root}/src/dawn_native/AttachmentState.h
+        ${dawn_root}/src/dawn_native/BackendConnection.cpp
+        ${dawn_root}/src/dawn_native/BackendConnection.h
+        ${dawn_root}/src/dawn_native/BindGroup.cpp
+        ${dawn_root}/src/dawn_native/BindGroup.h
+        ${dawn_root}/src/dawn_native/BindGroupLayout.cpp
+        ${dawn_root}/src/dawn_native/BindGroupLayout.h
+        ${dawn_root}/src/dawn_native/BindGroupTracker.h
+        ${dawn_root}/src/dawn_native/BuddyAllocator.cpp
+        ${dawn_root}/src/dawn_native/BuddyAllocator.h
+        ${dawn_root}/src/dawn_native/Buffer.cpp
+        ${dawn_root}/src/dawn_native/Buffer.h
+        ${dawn_root}/src/dawn_native/CommandAllocator.cpp
+        ${dawn_root}/src/dawn_native/CommandAllocator.h
+        ${dawn_root}/src/dawn_native/CommandBuffer.cpp
+        ${dawn_root}/src/dawn_native/CommandBuffer.h
+        ${dawn_root}/src/dawn_native/CommandBufferStateTracker.cpp
+        ${dawn_root}/src/dawn_native/CommandBufferStateTracker.h
+        ${dawn_root}/src/dawn_native/CommandEncoder.cpp
+        ${dawn_root}/src/dawn_native/CommandEncoder.h
+        ${dawn_root}/src/dawn_native/CommandValidation.cpp
+        ${dawn_root}/src/dawn_native/CommandValidation.h
+        ${dawn_root}/src/dawn_native/Commands.cpp
+        ${dawn_root}/src/dawn_native/Commands.h
+        ${dawn_root}/src/dawn_native/ComputePassEncoder.cpp
+        ${dawn_root}/src/dawn_native/ComputePassEncoder.h
+        ${dawn_root}/src/dawn_native/ComputePipeline.cpp
+        ${dawn_root}/src/dawn_native/ComputePipeline.h
+        ${dawn_root}/src/dawn_native/Device.cpp
+        ${dawn_root}/src/dawn_native/Device.h
+        ${dawn_root}/src/dawn_native/DynamicUploader.cpp
+        ${dawn_root}/src/dawn_native/DynamicUploader.h
+        ${dawn_root}/src/dawn_native/EncodingContext.cpp
+        ${dawn_root}/src/dawn_native/EncodingContext.h
+        ${dawn_root}/src/dawn_native/Error.cpp
+        ${dawn_root}/src/dawn_native/Error.h
+        ${dawn_root}/src/dawn_native/ErrorData.cpp
+        ${dawn_root}/src/dawn_native/ErrorData.h
+        ${dawn_root}/src/dawn_native/ErrorScope.cpp
+        ${dawn_root}/src/dawn_native/ErrorScope.h
+        ${dawn_root}/src/dawn_native/ErrorScopeTracker.cpp
+        ${dawn_root}/src/dawn_native/ErrorScopeTracker.h
+        ${dawn_root}/src/dawn_native/Extensions.cpp
+        ${dawn_root}/src/dawn_native/Extensions.h
+        ${dawn_root}/src/dawn_native/Fence.cpp
+        ${dawn_root}/src/dawn_native/Fence.h
+        ${dawn_root}/src/dawn_native/FenceSignalTracker.cpp
+        ${dawn_root}/src/dawn_native/FenceSignalTracker.h
+        ${dawn_root}/src/dawn_native/Format.cpp
+        ${dawn_root}/src/dawn_native/Format.h
+        ${dawn_root}/src/dawn_native/Forward.h
+        ${dawn_root}/src/dawn_native/Instance.cpp
+        ${dawn_root}/src/dawn_native/Instance.h
+        ${dawn_root}/src/dawn_native/ObjectBase.cpp
+        ${dawn_root}/src/dawn_native/ObjectBase.h
+        ${dawn_root}/src/dawn_native/PassResourceUsage.h
+        ${dawn_root}/src/dawn_native/PassResourceUsageTracker.cpp
+        ${dawn_root}/src/dawn_native/PassResourceUsageTracker.h
+        ${dawn_root}/src/dawn_native/PerStage.cpp
+        ${dawn_root}/src/dawn_native/PerStage.h
+        ${dawn_root}/src/dawn_native/Pipeline.cpp
+        ${dawn_root}/src/dawn_native/Pipeline.h
+        ${dawn_root}/src/dawn_native/PipelineLayout.cpp
+        ${dawn_root}/src/dawn_native/PipelineLayout.h
+        ${dawn_root}/src/dawn_native/ProgrammablePassEncoder.cpp
+        ${dawn_root}/src/dawn_native/ProgrammablePassEncoder.h
+        ${dawn_root}/src/dawn_native/Queue.cpp
+        ${dawn_root}/src/dawn_native/Queue.h
+        ${dawn_root}/src/dawn_native/RefCounted.cpp
+        ${dawn_root}/src/dawn_native/RefCounted.h
+        ${dawn_root}/src/dawn_native/RenderBundle.cpp
+        ${dawn_root}/src/dawn_native/RenderBundle.h
+        ${dawn_root}/src/dawn_native/RenderBundleEncoder.cpp
+        ${dawn_root}/src/dawn_native/RenderBundleEncoder.h
+        ${dawn_root}/src/dawn_native/RenderEncoderBase.cpp
+        ${dawn_root}/src/dawn_native/RenderEncoderBase.h
+        ${dawn_root}/src/dawn_native/RenderPassEncoder.cpp
+        ${dawn_root}/src/dawn_native/RenderPassEncoder.h
+        ${dawn_root}/src/dawn_native/RenderPipeline.cpp
+        ${dawn_root}/src/dawn_native/RenderPipeline.h
+        ${dawn_root}/src/dawn_native/ResourceHeap.h
+        ${dawn_root}/src/dawn_native/ResourceMemoryAllocation.cpp
+        ${dawn_root}/src/dawn_native/ResourceMemoryAllocation.h
+        ${dawn_root}/src/dawn_native/RingBufferAllocator.cpp
+        ${dawn_root}/src/dawn_native/RingBufferAllocator.h
+        ${dawn_root}/src/dawn_native/Sampler.cpp
+        ${dawn_root}/src/dawn_native/Sampler.h
+        ${dawn_root}/src/dawn_native/ShaderModule.cpp
+        ${dawn_root}/src/dawn_native/ShaderModule.h
+        ${dawn_root}/src/dawn_native/StagingBuffer.cpp
+        ${dawn_root}/src/dawn_native/StagingBuffer.h
+        ${dawn_root}/src/dawn_native/SwapChain.cpp
+        ${dawn_root}/src/dawn_native/SwapChain.h
+        ${dawn_root}/src/dawn_native/Texture.cpp
+        ${dawn_root}/src/dawn_native/Texture.h
+        ${dawn_root}/src/dawn_native/ToBackend.h
+        ${dawn_root}/src/dawn_native/Toggles.cpp
+        ${dawn_root}/src/dawn_native/Toggles.h
+        ${dawn_root}/src/dawn_native/dawn_platform.h
 
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_D3D12}>:${dawn_root}/src/dawn_native/d3d12/AdapterD3D12.cpp>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_D3D12}>:${dawn_root}/src/dawn_native/d3d12/AdapterD3D12.h>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_D3D12}>:${dawn_root}/src/dawn_native/d3d12/BackendD3D12.cpp>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_D3D12}>:${dawn_root}/src/dawn_native/d3d12/BackendD3D12.h>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_D3D12}>:${dawn_root}/src/dawn_native/d3d12/BindGroupD3D12.cpp>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_D3D12}>:${dawn_root}/src/dawn_native/d3d12/BindGroupD3D12.h>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_D3D12}>:${dawn_root}/src/dawn_native/d3d12/BindGroupLayoutD3D12.cpp>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_D3D12}>:${dawn_root}/src/dawn_native/d3d12/BindGroupLayoutD3D12.h>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_D3D12}>:${dawn_root}/src/dawn_native/d3d12/BufferD3D12.cpp>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_D3D12}>:${dawn_root}/src/dawn_native/d3d12/BufferD3D12.h>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_D3D12}>:${dawn_root}/src/dawn_native/d3d12/CommandAllocatorManager.cpp>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_D3D12}>:${dawn_root}/src/dawn_native/d3d12/CommandAllocatorManager.h>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_D3D12}>:${dawn_root}/src/dawn_native/d3d12/CommandBufferD3D12.cpp>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_D3D12}>:${dawn_root}/src/dawn_native/d3d12/CommandBufferD3D12.h>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_D3D12}>:${dawn_root}/src/dawn_native/d3d12/CommittedResourceAllocatorD3D12.cpp>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_D3D12}>:${dawn_root}/src/dawn_native/d3d12/CommittedResourceAllocatorD3D12.h>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_D3D12}>:${dawn_root}/src/dawn_native/d3d12/ComputePipelineD3D12.cpp>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_D3D12}>:${dawn_root}/src/dawn_native/d3d12/ComputePipelineD3D12.h>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_D3D12}>:${dawn_root}/src/dawn_native/d3d12/D3D12Info.cpp>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_D3D12}>:${dawn_root}/src/dawn_native/d3d12/D3D12Info.h>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_D3D12}>:${dawn_root}/src/dawn_native/d3d12/DescriptorHeapAllocator.cpp>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_D3D12}>:${dawn_root}/src/dawn_native/d3d12/DescriptorHeapAllocator.h>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_D3D12}>:${dawn_root}/src/dawn_native/d3d12/DeviceD3D12.cpp>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_D3D12}>:${dawn_root}/src/dawn_native/d3d12/DeviceD3D12.h>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_D3D12}>:${dawn_root}/src/dawn_native/d3d12/Forward.h>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_D3D12}>:${dawn_root}/src/dawn_native/d3d12/NativeSwapChainImplD3D12.cpp>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_D3D12}>:${dawn_root}/src/dawn_native/d3d12/NativeSwapChainImplD3D12.h>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_D3D12}>:${dawn_root}/src/dawn_native/d3d12/PipelineLayoutD3D12.cpp>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_D3D12}>:${dawn_root}/src/dawn_native/d3d12/PipelineLayoutD3D12.h>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_D3D12}>:${dawn_root}/src/dawn_native/d3d12/PlatformFunctions.cpp>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_D3D12}>:${dawn_root}/src/dawn_native/d3d12/PlatformFunctions.h>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_D3D12}>:${dawn_root}/src/dawn_native/d3d12/QueueD3D12.cpp>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_D3D12}>:${dawn_root}/src/dawn_native/d3d12/QueueD3D12.h>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_D3D12}>:${dawn_root}/src/dawn_native/d3d12/RenderPipelineD3D12.cpp>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_D3D12}>:${dawn_root}/src/dawn_native/d3d12/RenderPipelineD3D12.h>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_D3D12}>:${dawn_root}/src/dawn_native/d3d12/ResourceAllocator.cpp>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_D3D12}>:${dawn_root}/src/dawn_native/d3d12/ResourceAllocator.h>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_D3D12}>:${dawn_root}/src/dawn_native/d3d12/ResourceHeapD3D12.cpp>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_D3D12}>:${dawn_root}/src/dawn_native/d3d12/ResourceHeapD3D12.h>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_D3D12}>:${dawn_root}/src/dawn_native/d3d12/SamplerD3D12.cpp>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_D3D12}>:${dawn_root}/src/dawn_native/d3d12/SamplerD3D12.h>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_D3D12}>:${dawn_root}/src/dawn_native/d3d12/ShaderModuleD3D12.cpp>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_D3D12}>:${dawn_root}/src/dawn_native/d3d12/ShaderModuleD3D12.h>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_D3D12}>:${dawn_root}/src/dawn_native/d3d12/StagingBufferD3D12.cpp>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_D3D12}>:${dawn_root}/src/dawn_native/d3d12/StagingBufferD3D12.h>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_D3D12}>:${dawn_root}/src/dawn_native/d3d12/SwapChainD3D12.cpp>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_D3D12}>:${dawn_root}/src/dawn_native/d3d12/SwapChainD3D12.h>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_D3D12}>:${dawn_root}/src/dawn_native/d3d12/TextureCopySplitter.cpp>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_D3D12}>:${dawn_root}/src/dawn_native/d3d12/TextureCopySplitter.h>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_D3D12}>:${dawn_root}/src/dawn_native/d3d12/TextureD3D12.cpp>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_D3D12}>:${dawn_root}/src/dawn_native/d3d12/TextureD3D12.h>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_D3D12}>:${dawn_root}/src/dawn_native/d3d12/UtilsD3D12.cpp>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_D3D12}>:${dawn_root}/src/dawn_native/d3d12/UtilsD3D12.h>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_D3D12}>:${dawn_root}/src/dawn_native/d3d12/d3d12_platform.h>
+        $<$<BOOL:${DAWN_ENABLE_BACKEND_D3D12}>:
+            ${dawn_root}/src/dawn_native/d3d12/AdapterD3D12.cpp
+            ${dawn_root}/src/dawn_native/d3d12/AdapterD3D12.h
+            ${dawn_root}/src/dawn_native/d3d12/BackendD3D12.cpp
+            ${dawn_root}/src/dawn_native/d3d12/BackendD3D12.h
+            ${dawn_root}/src/dawn_native/d3d12/BindGroupD3D12.cpp
+            ${dawn_root}/src/dawn_native/d3d12/BindGroupD3D12.h
+            ${dawn_root}/src/dawn_native/d3d12/BindGroupLayoutD3D12.cpp
+            ${dawn_root}/src/dawn_native/d3d12/BindGroupLayoutD3D12.h
+            ${dawn_root}/src/dawn_native/d3d12/BufferD3D12.cpp
+            ${dawn_root}/src/dawn_native/d3d12/BufferD3D12.h
+            ${dawn_root}/src/dawn_native/d3d12/CommandAllocatorManager.cpp
+            ${dawn_root}/src/dawn_native/d3d12/CommandAllocatorManager.h
+            ${dawn_root}/src/dawn_native/d3d12/CommandBufferD3D12.cpp
+            ${dawn_root}/src/dawn_native/d3d12/CommandBufferD3D12.h
+            ${dawn_root}/src/dawn_native/d3d12/CommittedResourceAllocatorD3D12.cpp
+            ${dawn_root}/src/dawn_native/d3d12/CommittedResourceAllocatorD3D12.h
+            ${dawn_root}/src/dawn_native/d3d12/ComputePipelineD3D12.cpp
+            ${dawn_root}/src/dawn_native/d3d12/ComputePipelineD3D12.h
+            ${dawn_root}/src/dawn_native/d3d12/D3D12Info.cpp
+            ${dawn_root}/src/dawn_native/d3d12/D3D12Info.h
+            ${dawn_root}/src/dawn_native/d3d12/DescriptorHeapAllocator.cpp
+            ${dawn_root}/src/dawn_native/d3d12/DescriptorHeapAllocator.h
+            ${dawn_root}/src/dawn_native/d3d12/DeviceD3D12.cpp
+            ${dawn_root}/src/dawn_native/d3d12/DeviceD3D12.h
+            ${dawn_root}/src/dawn_native/d3d12/Forward.h
+            ${dawn_root}/src/dawn_native/d3d12/NativeSwapChainImplD3D12.cpp
+            ${dawn_root}/src/dawn_native/d3d12/NativeSwapChainImplD3D12.h
+            ${dawn_root}/src/dawn_native/d3d12/PipelineLayoutD3D12.cpp
+            ${dawn_root}/src/dawn_native/d3d12/PipelineLayoutD3D12.h
+            ${dawn_root}/src/dawn_native/d3d12/PlatformFunctions.cpp
+            ${dawn_root}/src/dawn_native/d3d12/PlatformFunctions.h
+            ${dawn_root}/src/dawn_native/d3d12/QueueD3D12.cpp
+            ${dawn_root}/src/dawn_native/d3d12/QueueD3D12.h
+            ${dawn_root}/src/dawn_native/d3d12/RenderPipelineD3D12.cpp
+            ${dawn_root}/src/dawn_native/d3d12/RenderPipelineD3D12.h
+            ${dawn_root}/src/dawn_native/d3d12/ResourceAllocator.cpp
+            ${dawn_root}/src/dawn_native/d3d12/ResourceAllocator.h
+            ${dawn_root}/src/dawn_native/d3d12/ResourceHeapD3D12.cpp
+            ${dawn_root}/src/dawn_native/d3d12/ResourceHeapD3D12.h
+            ${dawn_root}/src/dawn_native/d3d12/SamplerD3D12.cpp
+            ${dawn_root}/src/dawn_native/d3d12/SamplerD3D12.h
+            ${dawn_root}/src/dawn_native/d3d12/ShaderModuleD3D12.cpp
+            ${dawn_root}/src/dawn_native/d3d12/ShaderModuleD3D12.h
+            ${dawn_root}/src/dawn_native/d3d12/StagingBufferD3D12.cpp
+            ${dawn_root}/src/dawn_native/d3d12/StagingBufferD3D12.h
+            ${dawn_root}/src/dawn_native/d3d12/SwapChainD3D12.cpp
+            ${dawn_root}/src/dawn_native/d3d12/SwapChainD3D12.h
+            ${dawn_root}/src/dawn_native/d3d12/TextureCopySplitter.cpp
+            ${dawn_root}/src/dawn_native/d3d12/TextureCopySplitter.h
+            ${dawn_root}/src/dawn_native/d3d12/TextureD3D12.cpp
+            ${dawn_root}/src/dawn_native/d3d12/TextureD3D12.h
+            ${dawn_root}/src/dawn_native/d3d12/UtilsD3D12.cpp
+            ${dawn_root}/src/dawn_native/d3d12/UtilsD3D12.h
+            ${dawn_root}/src/dawn_native/d3d12/d3d12_platform.h
+        >
 
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_METAL}>:${dawn_root}/src/dawn_native/metal/BackendMTL.h>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_METAL}>:${dawn_root}/src/dawn_native/metal/BackendMTL.mm>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_METAL}>:${dawn_root}/src/dawn_native/metal/BufferMTL.h>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_METAL}>:${dawn_root}/src/dawn_native/metal/BufferMTL.mm>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_METAL}>:${dawn_root}/src/dawn_native/metal/CommandBufferMTL.h>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_METAL}>:${dawn_root}/src/dawn_native/metal/CommandBufferMTL.mm>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_METAL}>:${dawn_root}/src/dawn_native/metal/ComputePipelineMTL.h>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_METAL}>:${dawn_root}/src/dawn_native/metal/ComputePipelineMTL.mm>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_METAL}>:${dawn_root}/src/dawn_native/metal/DeviceMTL.h>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_METAL}>:${dawn_root}/src/dawn_native/metal/DeviceMTL.mm>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_METAL}>:${dawn_root}/src/dawn_native/metal/Forward.h>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_METAL}>:${dawn_root}/src/dawn_native/metal/PipelineLayoutMTL.h>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_METAL}>:${dawn_root}/src/dawn_native/metal/PipelineLayoutMTL.mm>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_METAL}>:${dawn_root}/src/dawn_native/metal/QueueMTL.h>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_METAL}>:${dawn_root}/src/dawn_native/metal/QueueMTL.mm>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_METAL}>:${dawn_root}/src/dawn_native/metal/RenderPipelineMTL.h>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_METAL}>:${dawn_root}/src/dawn_native/metal/RenderPipelineMTL.mm>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_METAL}>:${dawn_root}/src/dawn_native/metal/SamplerMTL.h>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_METAL}>:${dawn_root}/src/dawn_native/metal/SamplerMTL.mm>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_METAL}>:${dawn_root}/src/dawn_native/metal/ShaderModuleMTL.h>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_METAL}>:${dawn_root}/src/dawn_native/metal/ShaderModuleMTL.mm>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_METAL}>:${dawn_root}/src/dawn_native/metal/StagingBufferMTL.h>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_METAL}>:${dawn_root}/src/dawn_native/metal/StagingBufferMTL.mm>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_METAL}>:${dawn_root}/src/dawn_native/metal/SwapChainMTL.h>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_METAL}>:${dawn_root}/src/dawn_native/metal/SwapChainMTL.mm>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_METAL}>:${dawn_root}/src/dawn_native/metal/TextureMTL.h>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_METAL}>:${dawn_root}/src/dawn_native/metal/TextureMTL.mm>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_METAL}>:${dawn_root}/src/dawn_native/metal/UtilsMetal.h>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_METAL}>:${dawn_root}/src/dawn_native/metal/UtilsMetal.mm>
 
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_NULL}>:${dawn_root}/src/dawn_native/null/DeviceNull.cpp>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_NULL}>:${dawn_root}/src/dawn_native/null/DeviceNull.h>
+        $<$<BOOL:${DAWN_ENABLE_BACKEND_METAL}>:
+            ${dawn_root}/src/dawn_native/metal/BackendMTL.h
+            ${dawn_root}/src/dawn_native/metal/BackendMTL.mm
+            ${dawn_root}/src/dawn_native/metal/BufferMTL.h
+            ${dawn_root}/src/dawn_native/metal/BufferMTL.mm
+            ${dawn_root}/src/dawn_native/metal/CommandBufferMTL.h
+            ${dawn_root}/src/dawn_native/metal/CommandBufferMTL.mm
+            ${dawn_root}/src/dawn_native/metal/ComputePipelineMTL.h
+            ${dawn_root}/src/dawn_native/metal/ComputePipelineMTL.mm
+            ${dawn_root}/src/dawn_native/metal/DeviceMTL.h
+            ${dawn_root}/src/dawn_native/metal/DeviceMTL.mm
+            ${dawn_root}/src/dawn_native/metal/Forward.h
+            ${dawn_root}/src/dawn_native/metal/PipelineLayoutMTL.h
+            ${dawn_root}/src/dawn_native/metal/PipelineLayoutMTL.mm
+            ${dawn_root}/src/dawn_native/metal/QueueMTL.h
+            ${dawn_root}/src/dawn_native/metal/QueueMTL.mm
+            ${dawn_root}/src/dawn_native/metal/RenderPipelineMTL.h
+            ${dawn_root}/src/dawn_native/metal/RenderPipelineMTL.mm
+            ${dawn_root}/src/dawn_native/metal/SamplerMTL.h
+            ${dawn_root}/src/dawn_native/metal/SamplerMTL.mm
+            ${dawn_root}/src/dawn_native/metal/ShaderModuleMTL.h
+            ${dawn_root}/src/dawn_native/metal/ShaderModuleMTL.mm
+            ${dawn_root}/src/dawn_native/metal/StagingBufferMTL.h
+            ${dawn_root}/src/dawn_native/metal/StagingBufferMTL.mm
+            ${dawn_root}/src/dawn_native/metal/SwapChainMTL.h
+            ${dawn_root}/src/dawn_native/metal/SwapChainMTL.mm
+            ${dawn_root}/src/dawn_native/metal/TextureMTL.h
+            ${dawn_root}/src/dawn_native/metal/TextureMTL.mm
+            ${dawn_root}/src/dawn_native/metal/UtilsMetal.h
+            ${dawn_root}/src/dawn_native/metal/UtilsMetal.mm
+        >
 
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_OPENGL}>:${dawn_root}/src/dawn_native/opengl/BackendGL.cpp>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_OPENGL}>:${dawn_root}/src/dawn_native/opengl/BackendGL.h>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_OPENGL}>:${dawn_root}/src/dawn_native/opengl/BufferGL.cpp>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_OPENGL}>:${dawn_root}/src/dawn_native/opengl/BufferGL.h>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_OPENGL}>:${dawn_root}/src/dawn_native/opengl/CommandBufferGL.cpp>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_OPENGL}>:${dawn_root}/src/dawn_native/opengl/CommandBufferGL.h>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_OPENGL}>:${dawn_root}/src/dawn_native/opengl/ComputePipelineGL.cpp>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_OPENGL}>:${dawn_root}/src/dawn_native/opengl/ComputePipelineGL.h>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_OPENGL}>:${dawn_root}/src/dawn_native/opengl/DeviceGL.cpp>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_OPENGL}>:${dawn_root}/src/dawn_native/opengl/DeviceGL.h>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_OPENGL}>:${dawn_root}/src/dawn_native/opengl/Forward.h>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_OPENGL}>:${dawn_root}/src/dawn_native/opengl/GLFormat.cpp>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_OPENGL}>:${dawn_root}/src/dawn_native/opengl/GLFormat.h>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_OPENGL}>:${dawn_root}/src/dawn_native/opengl/NativeSwapChainImplGL.cpp>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_OPENGL}>:${dawn_root}/src/dawn_native/opengl/NativeSwapChainImplGL.h>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_OPENGL}>:${dawn_root}/src/dawn_native/opengl/OpenGLFunctions.cpp>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_OPENGL}>:${dawn_root}/src/dawn_native/opengl/OpenGLFunctions.h>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_OPENGL}>:${dawn_root}/src/dawn_native/opengl/PersistentPipelineStateGL.cpp>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_OPENGL}>:${dawn_root}/src/dawn_native/opengl/PersistentPipelineStateGL.h>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_OPENGL}>:${dawn_root}/src/dawn_native/opengl/PipelineGL.cpp>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_OPENGL}>:${dawn_root}/src/dawn_native/opengl/PipelineGL.h>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_OPENGL}>:${dawn_root}/src/dawn_native/opengl/PipelineLayoutGL.cpp>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_OPENGL}>:${dawn_root}/src/dawn_native/opengl/PipelineLayoutGL.h>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_OPENGL}>:${dawn_root}/src/dawn_native/opengl/QueueGL.cpp>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_OPENGL}>:${dawn_root}/src/dawn_native/opengl/QueueGL.h>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_OPENGL}>:${dawn_root}/src/dawn_native/opengl/RenderPipelineGL.cpp>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_OPENGL}>:${dawn_root}/src/dawn_native/opengl/RenderPipelineGL.h>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_OPENGL}>:${dawn_root}/src/dawn_native/opengl/SamplerGL.cpp>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_OPENGL}>:${dawn_root}/src/dawn_native/opengl/SamplerGL.h>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_OPENGL}>:${dawn_root}/src/dawn_native/opengl/ShaderModuleGL.cpp>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_OPENGL}>:${dawn_root}/src/dawn_native/opengl/ShaderModuleGL.h>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_OPENGL}>:${dawn_root}/src/dawn_native/opengl/SwapChainGL.cpp>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_OPENGL}>:${dawn_root}/src/dawn_native/opengl/SwapChainGL.h>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_OPENGL}>:${dawn_root}/src/dawn_native/opengl/TextureGL.cpp>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_OPENGL}>:${dawn_root}/src/dawn_native/opengl/TextureGL.h>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_OPENGL}>:${dawn_root}/src/dawn_native/opengl/UtilsGL.cpp>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_OPENGL}>:${dawn_root}/src/dawn_native/opengl/UtilsGL.h>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_OPENGL}>:${dawn_root}/src/dawn_native/opengl/opengl_platform.h>
+        $<$<BOOL:${DAWN_ENABLE_BACKEND_NULL}>:
+            ${dawn_root}/src/dawn_native/null/DeviceNull.cpp
+            ${dawn_root}/src/dawn_native/null/DeviceNull.h
+        >
 
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_VULKAN}>:${dawn_root}/src/dawn_native/vulkan/AdapterVk.cpp>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_VULKAN}>:${dawn_root}/src/dawn_native/vulkan/AdapterVk.h>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_VULKAN}>:${dawn_root}/src/dawn_native/vulkan/BackendVk.cpp>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_VULKAN}>:${dawn_root}/src/dawn_native/vulkan/BackendVk.h>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_VULKAN}>:${dawn_root}/src/dawn_native/vulkan/BindGroupLayoutVk.cpp>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_VULKAN}>:${dawn_root}/src/dawn_native/vulkan/BindGroupLayoutVk.h>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_VULKAN}>:${dawn_root}/src/dawn_native/vulkan/BindGroupVk.cpp>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_VULKAN}>:${dawn_root}/src/dawn_native/vulkan/BindGroupVk.h>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_VULKAN}>:${dawn_root}/src/dawn_native/vulkan/BufferVk.cpp>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_VULKAN}>:${dawn_root}/src/dawn_native/vulkan/BufferVk.h>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_VULKAN}>:${dawn_root}/src/dawn_native/vulkan/CommandBufferVk.cpp>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_VULKAN}>:${dawn_root}/src/dawn_native/vulkan/CommandBufferVk.h>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_VULKAN}>:${dawn_root}/src/dawn_native/vulkan/ComputePipelineVk.cpp>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_VULKAN}>:${dawn_root}/src/dawn_native/vulkan/ComputePipelineVk.h>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_VULKAN}>:${dawn_root}/src/dawn_native/vulkan/DeviceVk.cpp>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_VULKAN}>:${dawn_root}/src/dawn_native/vulkan/DeviceVk.h>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_VULKAN}>:${dawn_root}/src/dawn_native/vulkan/ExternalHandle.h>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_VULKAN}>:${dawn_root}/src/dawn_native/vulkan/FencedDeleter.cpp>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_VULKAN}>:${dawn_root}/src/dawn_native/vulkan/FencedDeleter.h>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_VULKAN}>:${dawn_root}/src/dawn_native/vulkan/Forward.h>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_VULKAN}>:${dawn_root}/src/dawn_native/vulkan/MemoryAllocator.cpp>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_VULKAN}>:${dawn_root}/src/dawn_native/vulkan/MemoryAllocator.h>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_VULKAN}>:${dawn_root}/src/dawn_native/vulkan/MemoryResourceAllocatorVk.cpp>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_VULKAN}>:${dawn_root}/src/dawn_native/vulkan/MemoryResourceAllocatorVk.h>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_VULKAN}>:${dawn_root}/src/dawn_native/vulkan/NativeSwapChainImplVk.cpp>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_VULKAN}>:${dawn_root}/src/dawn_native/vulkan/NativeSwapChainImplVk.h>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_VULKAN}>:${dawn_root}/src/dawn_native/vulkan/PipelineLayoutVk.cpp>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_VULKAN}>:${dawn_root}/src/dawn_native/vulkan/PipelineLayoutVk.h>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_VULKAN}>:${dawn_root}/src/dawn_native/vulkan/QueueVk.cpp>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_VULKAN}>:${dawn_root}/src/dawn_native/vulkan/QueueVk.h>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_VULKAN}>:${dawn_root}/src/dawn_native/vulkan/RenderPassCache.cpp>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_VULKAN}>:${dawn_root}/src/dawn_native/vulkan/RenderPassCache.h>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_VULKAN}>:${dawn_root}/src/dawn_native/vulkan/RenderPipelineVk.cpp>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_VULKAN}>:${dawn_root}/src/dawn_native/vulkan/RenderPipelineVk.h>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_VULKAN}>:${dawn_root}/src/dawn_native/vulkan/ResourceMemoryVk.cpp>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_VULKAN}>:${dawn_root}/src/dawn_native/vulkan/ResourceMemoryVk.h>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_VULKAN}>:${dawn_root}/src/dawn_native/vulkan/SamplerVk.cpp>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_VULKAN}>:${dawn_root}/src/dawn_native/vulkan/SamplerVk.h>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_VULKAN}>:${dawn_root}/src/dawn_native/vulkan/ShaderModuleVk.cpp>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_VULKAN}>:${dawn_root}/src/dawn_native/vulkan/ShaderModuleVk.h>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_VULKAN}>:${dawn_root}/src/dawn_native/vulkan/StagingBufferVk.cpp>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_VULKAN}>:${dawn_root}/src/dawn_native/vulkan/StagingBufferVk.h>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_VULKAN}>:${dawn_root}/src/dawn_native/vulkan/SwapChainVk.cpp>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_VULKAN}>:${dawn_root}/src/dawn_native/vulkan/SwapChainVk.h>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_VULKAN}>:${dawn_root}/src/dawn_native/vulkan/TextureVk.cpp>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_VULKAN}>:${dawn_root}/src/dawn_native/vulkan/TextureVk.h>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_VULKAN}>:${dawn_root}/src/dawn_native/vulkan/UtilsVulkan.cpp>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_VULKAN}>:${dawn_root}/src/dawn_native/vulkan/UtilsVulkan.h>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_VULKAN}>:${dawn_root}/src/dawn_native/vulkan/VulkanError.cpp>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_VULKAN}>:${dawn_root}/src/dawn_native/vulkan/VulkanError.h>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_VULKAN}>:${dawn_root}/src/dawn_native/vulkan/VulkanFunctions.cpp>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_VULKAN}>:${dawn_root}/src/dawn_native/vulkan/VulkanFunctions.h>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_VULKAN}>:${dawn_root}/src/dawn_native/vulkan/VulkanInfo.cpp>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_VULKAN}>:${dawn_root}/src/dawn_native/vulkan/VulkanInfo.h>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_VULKAN}>:${dawn_root}/src/dawn_native/vulkan/external_memory/MemoryService.h>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_VULKAN}>:${dawn_root}/src/dawn_native/vulkan/external_semaphore/SemaphoreService.h>
-    $<$<AND:$<BOOL:${DAWN_ENABLE_BACKEND_VULKAN}>,$<PLATFORM_ID:Linux>>:${dawn_root}/src/dawn_native/vulkan/external_memory/MemoryServiceOpaqueFD.cpp>
-    $<$<AND:$<BOOL:${DAWN_ENABLE_BACKEND_VULKAN}>,$<PLATFORM_ID:Linux>>:${dawn_root}/src/dawn_native/vulkan/external_semaphore/SemaphoreServiceOpaqueFD.cpp>
-    $<$<AND:$<BOOL:${DAWN_ENABLE_BACKEND_VULKAN}>,$<NOT:$<PLATFORM_ID:Linux>>>:${dawn_root}/src/dawn_native/vulkan/external_memory/MemoryServiceNull.cpp>
-    $<$<AND:$<BOOL:${DAWN_ENABLE_BACKEND_VULKAN}>,$<NOT:$<PLATFORM_ID:Linux>>>:${dawn_root}/src/dawn_native/vulkan/external_semaphore/SemaphoreServiceNull.cpp>
+        $<$<BOOL:${DAWN_ENABLE_BACKEND_OPENGL}>:
+            ${dawn_root}/src/dawn_native/opengl/BackendGL.cpp
+            ${dawn_root}/src/dawn_native/opengl/BackendGL.h
+            ${dawn_root}/src/dawn_native/opengl/BufferGL.cpp
+            ${dawn_root}/src/dawn_native/opengl/BufferGL.h
+            ${dawn_root}/src/dawn_native/opengl/CommandBufferGL.cpp
+            ${dawn_root}/src/dawn_native/opengl/CommandBufferGL.h
+            ${dawn_root}/src/dawn_native/opengl/ComputePipelineGL.cpp
+            ${dawn_root}/src/dawn_native/opengl/ComputePipelineGL.h
+            ${dawn_root}/src/dawn_native/opengl/DeviceGL.cpp
+            ${dawn_root}/src/dawn_native/opengl/DeviceGL.h
+            ${dawn_root}/src/dawn_native/opengl/Forward.h
+            ${dawn_root}/src/dawn_native/opengl/GLFormat.cpp
+            ${dawn_root}/src/dawn_native/opengl/GLFormat.h
+            ${dawn_root}/src/dawn_native/opengl/NativeSwapChainImplGL.cpp
+            ${dawn_root}/src/dawn_native/opengl/NativeSwapChainImplGL.h
+            ${dawn_root}/src/dawn_native/opengl/OpenGLFunctions.cpp
+            ${dawn_root}/src/dawn_native/opengl/OpenGLFunctions.h
+            ${dawn_root}/src/dawn_native/opengl/PersistentPipelineStateGL.cpp
+            ${dawn_root}/src/dawn_native/opengl/PersistentPipelineStateGL.h
+            ${dawn_root}/src/dawn_native/opengl/PipelineGL.cpp
+            ${dawn_root}/src/dawn_native/opengl/PipelineGL.h
+            ${dawn_root}/src/dawn_native/opengl/PipelineLayoutGL.cpp
+            ${dawn_root}/src/dawn_native/opengl/PipelineLayoutGL.h
+            ${dawn_root}/src/dawn_native/opengl/QueueGL.cpp
+            ${dawn_root}/src/dawn_native/opengl/QueueGL.h
+            ${dawn_root}/src/dawn_native/opengl/RenderPipelineGL.cpp
+            ${dawn_root}/src/dawn_native/opengl/RenderPipelineGL.h
+            ${dawn_root}/src/dawn_native/opengl/SamplerGL.cpp
+            ${dawn_root}/src/dawn_native/opengl/SamplerGL.h
+            ${dawn_root}/src/dawn_native/opengl/ShaderModuleGL.cpp
+            ${dawn_root}/src/dawn_native/opengl/ShaderModuleGL.h
+            ${dawn_root}/src/dawn_native/opengl/SwapChainGL.cpp
+            ${dawn_root}/src/dawn_native/opengl/SwapChainGL.h
+            ${dawn_root}/src/dawn_native/opengl/TextureGL.cpp
+            ${dawn_root}/src/dawn_native/opengl/TextureGL.h
+            ${dawn_root}/src/dawn_native/opengl/UtilsGL.cpp
+            ${dawn_root}/src/dawn_native/opengl/UtilsGL.h
+            ${dawn_root}/src/dawn_native/opengl/opengl_platform.h
+        >
+
+        $<$<BOOL:${DAWN_ENABLE_BACKEND_VULKAN}>:
+            ${dawn_root}/src/dawn_native/vulkan/AdapterVk.cpp
+            ${dawn_root}/src/dawn_native/vulkan/AdapterVk.h
+            ${dawn_root}/src/dawn_native/vulkan/BackendVk.cpp
+            ${dawn_root}/src/dawn_native/vulkan/BackendVk.h
+            ${dawn_root}/src/dawn_native/vulkan/BindGroupLayoutVk.cpp
+            ${dawn_root}/src/dawn_native/vulkan/BindGroupLayoutVk.h
+            ${dawn_root}/src/dawn_native/vulkan/BindGroupVk.cpp
+            ${dawn_root}/src/dawn_native/vulkan/BindGroupVk.h
+            ${dawn_root}/src/dawn_native/vulkan/BufferVk.cpp
+            ${dawn_root}/src/dawn_native/vulkan/BufferVk.h
+            ${dawn_root}/src/dawn_native/vulkan/CommandBufferVk.cpp
+            ${dawn_root}/src/dawn_native/vulkan/CommandBufferVk.h
+            ${dawn_root}/src/dawn_native/vulkan/ComputePipelineVk.cpp
+            ${dawn_root}/src/dawn_native/vulkan/ComputePipelineVk.h
+            ${dawn_root}/src/dawn_native/vulkan/DeviceVk.cpp
+            ${dawn_root}/src/dawn_native/vulkan/DeviceVk.h
+            ${dawn_root}/src/dawn_native/vulkan/ExternalHandle.h
+            ${dawn_root}/src/dawn_native/vulkan/FencedDeleter.cpp
+            ${dawn_root}/src/dawn_native/vulkan/FencedDeleter.h
+            ${dawn_root}/src/dawn_native/vulkan/Forward.h
+            ${dawn_root}/src/dawn_native/vulkan/MemoryAllocator.cpp
+            ${dawn_root}/src/dawn_native/vulkan/MemoryAllocator.h
+            ${dawn_root}/src/dawn_native/vulkan/MemoryResourceAllocatorVk.cpp
+            ${dawn_root}/src/dawn_native/vulkan/MemoryResourceAllocatorVk.h
+            ${dawn_root}/src/dawn_native/vulkan/NativeSwapChainImplVk.cpp
+            ${dawn_root}/src/dawn_native/vulkan/NativeSwapChainImplVk.h
+            ${dawn_root}/src/dawn_native/vulkan/PipelineLayoutVk.cpp
+            ${dawn_root}/src/dawn_native/vulkan/PipelineLayoutVk.h
+            ${dawn_root}/src/dawn_native/vulkan/QueueVk.cpp
+            ${dawn_root}/src/dawn_native/vulkan/QueueVk.h
+            ${dawn_root}/src/dawn_native/vulkan/RenderPassCache.cpp
+            ${dawn_root}/src/dawn_native/vulkan/RenderPassCache.h
+            ${dawn_root}/src/dawn_native/vulkan/RenderPipelineVk.cpp
+            ${dawn_root}/src/dawn_native/vulkan/RenderPipelineVk.h
+            ${dawn_root}/src/dawn_native/vulkan/ResourceMemoryVk.cpp
+            ${dawn_root}/src/dawn_native/vulkan/ResourceMemoryVk.h
+            ${dawn_root}/src/dawn_native/vulkan/SamplerVk.cpp
+            ${dawn_root}/src/dawn_native/vulkan/SamplerVk.h
+            ${dawn_root}/src/dawn_native/vulkan/ShaderModuleVk.cpp
+            ${dawn_root}/src/dawn_native/vulkan/ShaderModuleVk.h
+            ${dawn_root}/src/dawn_native/vulkan/StagingBufferVk.cpp
+            ${dawn_root}/src/dawn_native/vulkan/StagingBufferVk.h
+            ${dawn_root}/src/dawn_native/vulkan/SwapChainVk.cpp
+            ${dawn_root}/src/dawn_native/vulkan/SwapChainVk.h
+            ${dawn_root}/src/dawn_native/vulkan/TextureVk.cpp
+            ${dawn_root}/src/dawn_native/vulkan/TextureVk.h
+            ${dawn_root}/src/dawn_native/vulkan/UtilsVulkan.cpp
+            ${dawn_root}/src/dawn_native/vulkan/UtilsVulkan.h
+            ${dawn_root}/src/dawn_native/vulkan/VulkanError.cpp
+            ${dawn_root}/src/dawn_native/vulkan/VulkanError.h
+            ${dawn_root}/src/dawn_native/vulkan/VulkanFunctions.cpp
+            ${dawn_root}/src/dawn_native/vulkan/VulkanFunctions.h
+            ${dawn_root}/src/dawn_native/vulkan/VulkanInfo.cpp
+            ${dawn_root}/src/dawn_native/vulkan/VulkanInfo.h
+            ${dawn_root}/src/dawn_native/vulkan/external_memory/MemoryService.h
+            ${dawn_root}/src/dawn_native/vulkan/external_semaphore/SemaphoreService.h
+            $<$<PLATFORM_ID:Linux>:
+                ${dawn_root}/src/dawn_native/vulkan/external_memory/MemoryServiceOpaqueFD.cpp
+                ${dawn_root}/src/dawn_native/vulkan/external_semaphore/SemaphoreServiceOpaqueFD.cpp
+            >
+            $<$<NOT:$<PLATFORM_ID:Linux>>:
+                ${dawn_root}/src/dawn_native/vulkan/external_memory/MemoryServiceNull.cpp
+                ${dawn_root}/src/dawn_native/vulkan/external_semaphore/SemaphoreServiceNull.cpp
+            >
+        >
+    >
 )
 
 # The static and shared libraries for dawn_native. Most of the files are
@@ -490,18 +517,18 @@ dawn_json_generator(dawn_wire_gen
     target
         dawn_wire
     outputs
-        ${PROJECT_BINARY_DIR}/dawn_wire/WireCmd_autogen.h
-        ${PROJECT_BINARY_DIR}/dawn_wire/WireCmd_autogen.cpp
-        ${PROJECT_BINARY_DIR}/dawn_wire/client/ApiObjects_autogen.h
-        ${PROJECT_BINARY_DIR}/dawn_wire/client/ApiProcs_autogen.cpp
-        ${PROJECT_BINARY_DIR}/dawn_wire/client/ApiProcs_autogen.h
-        ${PROJECT_BINARY_DIR}/dawn_wire/client/ClientBase_autogen.h
-        ${PROJECT_BINARY_DIR}/dawn_wire/client/ClientHandlers_autogen.cpp
-        ${PROJECT_BINARY_DIR}/dawn_wire/client/ClientPrototypes_autogen.inc
-        ${PROJECT_BINARY_DIR}/dawn_wire/server/ServerBase_autogen.h
-        ${PROJECT_BINARY_DIR}/dawn_wire/server/ServerDoers_autogen.cpp
-        ${PROJECT_BINARY_DIR}/dawn_wire/server/ServerHandlers_autogen.cpp
-        ${PROJECT_BINARY_DIR}/dawn_wire/server/ServerPrototypes_autogen.inc
+        ${PROJECT_BINARY_DIR}/src/dawn_wire/WireCmd_autogen.h
+        ${PROJECT_BINARY_DIR}/src/dawn_wire/WireCmd_autogen.cpp
+        ${PROJECT_BINARY_DIR}/src/dawn_wire/client/ApiObjects_autogen.h
+        ${PROJECT_BINARY_DIR}/src/dawn_wire/client/ApiProcs_autogen.cpp
+        ${PROJECT_BINARY_DIR}/src/dawn_wire/client/ApiProcs_autogen.h
+        ${PROJECT_BINARY_DIR}/src/dawn_wire/client/ClientBase_autogen.h
+        ${PROJECT_BINARY_DIR}/src/dawn_wire/client/ClientHandlers_autogen.cpp
+        ${PROJECT_BINARY_DIR}/src/dawn_wire/client/ClientPrototypes_autogen.inc
+        ${PROJECT_BINARY_DIR}/src/dawn_wire/server/ServerBase_autogen.h
+        ${PROJECT_BINARY_DIR}/src/dawn_wire/server/ServerDoers_autogen.cpp
+        ${PROJECT_BINARY_DIR}/src/dawn_wire/server/ServerHandlers_autogen.cpp
+        ${PROJECT_BINARY_DIR}/src/dawn_wire/server/ServerPrototypes_autogen.inc
 )
 
 add_library(dawn_wire
@@ -639,3 +666,103 @@ if(DAWN_BUILD_SAMPLES)
     target_include_directories(CubeReflection PUBLIC ${PROJECT_SOURCE_DIR}/third_party/glm)
 
 endif()
+
+
+###############################################################################
+# Installation
+###############################################################################
+set(config_install_dir ${CMAKE_INSTALL_LIBDIR}/cmake/dawn)
+set(generated_dir ${CMAKE_CURRENT_BINARY_DIR}/generated)
+set(version_config ${generated_dir}/dawnConfigVersion.cmake)
+set(project_config ${generated_dir}/dawnConfig.cmake)
+set(target_export_name dawnTargets)
+set(namespace dawn::)
+
+write_basic_package_version_file(
+    ${version_config}
+    VERSION 1.0.0
+    COMPATIBILITY SameMajorVersion
+)
+
+configure_package_config_file(
+    cmake/config.cmake.in
+    ${project_config}
+    INSTALL_DESTINATION ${config_install_dir}
+)
+
+# some targets from shaderc have absolute build paths in their
+# INTERFACE_INCLUDE_DIRECTORIES. So let's fix that by hiding them from the
+# install package by marking them as BUILD_INTERFACE.
+get_property(spirv_include_directory TARGET SPIRV PROPERTY INTERFACE_INCLUDE_DIRECTORIES)
+set_property(TARGET SPIRV PROPERTY INTERFACE_INCLUDE_DIRECTORIES $<BUILD_INTERFACE:${spirv_include_directory}>)
+
+get_property(shaderc_include_directory TARGET shaderc PROPERTY INTERFACE_INCLUDE_DIRECTORIES)
+set_property(TARGET shaderc PROPERTY INTERFACE_INCLUDE_DIRECTORIES $<BUILD_INTERFACE:${shaderc_include_directory}>)
+
+get_property(shaderc_util_include_directory TARGET shaderc_util PROPERTY INTERFACE_INCLUDE_DIRECTORIES)
+set_property(TARGET shaderc_util PROPERTY INTERFACE_INCLUDE_DIRECTORIES $<BUILD_INTERFACE:${shaderc_util_include_directory}>)
+
+get_property(glslang_include_directory TARGET glslang PROPERTY INTERFACE_INCLUDE_DIRECTORIES)
+set_property(TARGET glslang PROPERTY INTERFACE_INCLUDE_DIRECTORIES $<BUILD_INTERFACE:${glslang_include_directory}>)
+
+install(
+    TARGETS
+        dawn
+        dawn_headers
+        dawn_gen
+        dawn_public_include_dirs
+        dawn_headers_gen
+        dawn_utils
+        dawn_internal
+        dawn_native
+        dawn_native_headers
+        dawn_native_sources
+        dawn_native_utils_gen
+        dawn_native_internal
+        dawn_wire
+        dawn_wire_headers
+        dawn_wire_gen
+        dawn_common
+        dawn_platform
+        shaderc
+        glslang
+        OSDependent
+        OGLCompiler
+        shaderc_util
+        SPIRV
+        SPIRV-Tools-opt
+        SPIRV-Tools
+        HLSL
+        spirv-cross-glsl
+        spirv-cross-hlsl
+        spirv-cross-msl
+        spirv-cross-core
+    EXPORT ${target_export_name}
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+    INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+)
+
+install(
+    DIRECTORY
+        ${PROJECT_SOURCE_DIR}/dawn/src/include/
+        ${PROJECT_BINARY_DIR}/src/include/
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+)
+
+install(
+    FILES cmake/FindD3D12.cmake cmake/FindMetal.cmake
+    DESTINATION ${config_install_dir}
+)
+
+install(
+    FILES ${project_config} ${version_config}
+    DESTINATION ${config_install_dir}
+)
+
+install(
+    EXPORT ${target_export_name}
+    NAMESPACE ${namespace}
+    DESTINATION ${config_install_dir}
+)

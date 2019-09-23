@@ -71,15 +71,19 @@ target_compile_definitions(vulkan_headers_config INTERFACE
 
 add_library(vulkan_headers INTERFACE)
 target_sources(vulkan_headers INTERFACE
-    ${dawn_root}/third_party/khronos/vulkan/vk_icd.h
-    ${dawn_root}/third_party/khronos/vulkan/vk_layer.h
-    ${dawn_root}/third_party/khronos/vulkan/vk_platform.h
-    ${dawn_root}/third_party/khronos/vulkan/vk_sdk_platform.h
-    ${dawn_root}/third_party/khronos/vulkan/vulkan.h
-    ${dawn_root}/third_party/khronos/vulkan/vulkan_core.h
+    $<BUILD_INTERFACE:
+        ${dawn_root}/third_party/khronos/vulkan/vk_icd.h
+        ${dawn_root}/third_party/khronos/vulkan/vk_layer.h
+        ${dawn_root}/third_party/khronos/vulkan/vk_platform.h
+        ${dawn_root}/third_party/khronos/vulkan/vk_sdk_platform.h
+        ${dawn_root}/third_party/khronos/vulkan/vulkan.h
+        ${dawn_root}/third_party/khronos/vulkan/vulkan_core.h
+    >
 )
 target_link_libraries(vulkan_headers INTERFACE vulkan_headers_config)
 
 add_library(khronos_platform INTERFACE)
-target_sources(khronos_platform INTERFACE ${dawn_root}/third_party/khronos/KHR/khrplatform.h)
+target_sources(khronos_platform INTERFACE
+    $<BUILD_INTERFACE:${dawn_root}/third_party/khronos/KHR/khrplatform.h>
+)
 target_link_libraries(khronos_platform INTERFACE khronos_headers_public)

@@ -29,16 +29,18 @@ dawn_json_generator(dawn_headers_gen
     target
         dawn_headers
     outputs
-        ${PROJECT_BINARY_DIR}/dawn/dawncpp.h
-        ${PROJECT_BINARY_DIR}/dawn/dawn.h
+        ${PROJECT_BINARY_DIR}/src/include/dawn/dawncpp.h
+        ${PROJECT_BINARY_DIR}/src/include/dawn/dawn.h
 )
 
 add_library(dawn_headers INTERFACE)
 target_link_libraries(dawn_headers INTERFACE dawn_public_include_dirs dawn_headers_gen)
 target_sources(dawn_headers INTERFACE
-    ${PROJECT_SOURCE_DIR}/dawn/src/include/dawn/EnumClassBitmasks.h
-    ${PROJECT_SOURCE_DIR}/dawn/src/include/dawn/dawn_export.h
-    ${PROJECT_SOURCE_DIR}/dawn/src/include/dawn/dawn_wsi.h
+    $<BUILD_INTERFACE:
+        ${PROJECT_SOURCE_DIR}/dawn/src/include/dawn/EnumClassBitmasks.h
+        ${PROJECT_SOURCE_DIR}/dawn/src/include/dawn/dawn_export.h
+        ${PROJECT_SOURCE_DIR}/dawn/src/include/dawn/dawn_wsi.h
+    >
 )
 
 ################################################################################
@@ -49,8 +51,8 @@ dawn_json_generator(dawn_gen
     target
         libdawn
     outputs
-        ${PROJECT_BINARY_DIR}/dawn/dawncpp.cpp
-        ${PROJECT_BINARY_DIR}/dawn/dawn.c
+        ${PROJECT_BINARY_DIR}/src/dawn/dawncpp.cpp
+        ${PROJECT_BINARY_DIR}/src/dawn/dawn.c
 )
 
 add_library(dawn)
