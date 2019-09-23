@@ -28,9 +28,16 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 include(CMakePackageConfigHelpers)
 include(GNUInstallDirs)
+include(HunterGate)
 include(dawn_generator)
 
+HunterGate(
+    URL "https://github.com/ruslo/hunter/archive/v0.23.214.tar.gz"
+    SHA1 "e14bc153a7f16d6a5eeec845fb0283c8fad8c358"
+)
+
 project(dawn)
+
 
 set(OpenGL_GL_PREFERENCE GLVND)
 
@@ -40,6 +47,10 @@ find_package(OpenGL QUIET)
 find_package(X11 QUIET)
 find_package(Vulkan QUIET)
 find_package(Python3 QUIET REQUIRED)
+
+# https://docs.hunter.sh/en/latest/packages/pkg/glfw.html
+hunter_add_package(glfw)
+find_package(glfw3 CONFIG REQUIRED)
 
 if( CMAKE_BUILD_TYPE STREQUAL "Debug" )
     option(DAWN_ENABLE_ASSERTS "Enable assert" ON)
@@ -634,6 +645,10 @@ target_link_libraries(dawn_bindings
 
 if(DAWN_BUILD_SAMPLES)
 
+    # https://docs.hunter.sh/en/latest/packages/pkg/glm.html
+    hunter_add_package(glm)
+    find_package(glm REQUIRED)
+
     # Static library to contain code and dependencies common to all samples
     add_library(dawn_sample_utils STATIC
         dawn/examples/SampleUtils.cpp
@@ -655,7 +670,7 @@ if(DAWN_BUILD_SAMPLES)
 
     macro(dawn_sample target_name)
         add_executable(${target_name} dawn/examples/${target_name})
-        target_link_libraries(${target_name} PRIVATE dawn_sample_utils)
+        target_link_libraries(${target_name} PRIVATE dawn_sample_utils glm)
         list(APPEND dawn_samples ${target_name})
     endmacro()
 
@@ -664,9 +679,6 @@ if(DAWN_BUILD_SAMPLES)
     dawn_sample(ComputeBoids)
     dawn_sample(Animometer)
     dawn_sample(CubeReflection)
-
-    target_include_directories(ComputeBoids PRIVATE ${PROJECT_SOURCE_DIR}/third_party/glm)
-    target_include_directories(CubeReflection PRIVATE ${PROJECT_SOURCE_DIR}/third_party/glm)
 
 endif()
 
@@ -742,7 +754,6 @@ install(
         spirv-cross-msl
         spirv-cross-core
         ${dawn_samples}
-        glfw
     EXPORT ${target_export_name}
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
