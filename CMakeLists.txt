@@ -483,12 +483,12 @@ target_sources(dawn_native_sources INTERFACE
 # already compiled in dawn_native_sources, but we still need to compile
 # files defining exported symbols.
 add_library(dawn_native
-    ${dawn_root}/src/dawn_native/DawnNative.cpp
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_D3D12}>:${dawn_root}/src/dawn_native/d3d12/D3D12Backend.cpp>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_METAL}>:${dawn_root}/src/dawn_native/metal/MetalBackend.mm>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_NULL}>:${dawn_root}/src/dawn_native/null/NullBackend.cpp>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_OPENGL}>:${dawn_root}/src/dawn_native/opengl/OpenGLBackend.cpp>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_VULKAN}>:${dawn_root}/src/dawn_native/vulkan/VulkanBackend.cpp>
+    dawn/src/dawn_native/DawnNative.cpp
+    $<$<BOOL:${DAWN_ENABLE_BACKEND_D3D12}>:dawn/src/dawn_native/d3d12/D3D12Backend.cpp>
+    $<$<BOOL:${DAWN_ENABLE_BACKEND_METAL}>:dawn/src/dawn_native/metal/MetalBackend.mm>
+    $<$<BOOL:${DAWN_ENABLE_BACKEND_NULL}>:dawn/src/dawn_native/null/NullBackend.cpp>
+    $<$<BOOL:${DAWN_ENABLE_BACKEND_OPENGL}>:dawn/src/dawn_native/opengl/OpenGLBackend.cpp>
+    $<$<BOOL:${DAWN_ENABLE_BACKEND_VULKAN}>:dawn/src/dawn_native/vulkan/VulkanBackend.cpp>
 )
 
 target_link_libraries(dawn_native
@@ -532,31 +532,31 @@ dawn_json_generator(dawn_wire_gen
 )
 
 add_library(dawn_wire
-    ${dawn_root}/src/dawn_wire/WireClient.cpp
-    ${dawn_root}/src/dawn_wire/WireDeserializeAllocator.cpp
-    ${dawn_root}/src/dawn_wire/WireDeserializeAllocator.h
-    ${dawn_root}/src/dawn_wire/WireServer.cpp
-    ${dawn_root}/src/dawn_wire/client/ApiObjects.h
-    ${dawn_root}/src/dawn_wire/client/ApiProcs.cpp
-    ${dawn_root}/src/dawn_wire/client/Buffer.cpp
-    ${dawn_root}/src/dawn_wire/client/Buffer.h
-    ${dawn_root}/src/dawn_wire/client/Client.cpp
-    ${dawn_root}/src/dawn_wire/client/Client.h
-    ${dawn_root}/src/dawn_wire/client/ClientDoers.cpp
-    ${dawn_root}/src/dawn_wire/client/ClientInlineMemoryTransferService.cpp
-    ${dawn_root}/src/dawn_wire/client/Device.cpp
-    ${dawn_root}/src/dawn_wire/client/Device.h
-    ${dawn_root}/src/dawn_wire/client/Fence.cpp
-    ${dawn_root}/src/dawn_wire/client/Fence.h
-    ${dawn_root}/src/dawn_wire/client/ObjectAllocator.h
-    ${dawn_root}/src/dawn_wire/server/ObjectStorage.h
-    ${dawn_root}/src/dawn_wire/server/Server.cpp
-    ${dawn_root}/src/dawn_wire/server/Server.h
-    ${dawn_root}/src/dawn_wire/server/ServerBuffer.cpp
-    ${dawn_root}/src/dawn_wire/server/ServerDevice.cpp
-    ${dawn_root}/src/dawn_wire/server/ServerFence.cpp
-    ${dawn_root}/src/dawn_wire/server/ServerInlineMemoryTransferService.cpp
-    ${dawn_root}/src/dawn_wire/server/ServerQueue.cpp
+    dawn/src/dawn_wire/WireClient.cpp
+    dawn/src/dawn_wire/WireDeserializeAllocator.cpp
+    dawn/src/dawn_wire/WireDeserializeAllocator.h
+    dawn/src/dawn_wire/WireServer.cpp
+    dawn/src/dawn_wire/client/ApiObjects.h
+    dawn/src/dawn_wire/client/ApiProcs.cpp
+    dawn/src/dawn_wire/client/Buffer.cpp
+    dawn/src/dawn_wire/client/Buffer.h
+    dawn/src/dawn_wire/client/Client.cpp
+    dawn/src/dawn_wire/client/Client.h
+    dawn/src/dawn_wire/client/ClientDoers.cpp
+    dawn/src/dawn_wire/client/ClientInlineMemoryTransferService.cpp
+    dawn/src/dawn_wire/client/Device.cpp
+    dawn/src/dawn_wire/client/Device.h
+    dawn/src/dawn_wire/client/Fence.cpp
+    dawn/src/dawn_wire/client/Fence.h
+    dawn/src/dawn_wire/client/ObjectAllocator.h
+    dawn/src/dawn_wire/server/ObjectStorage.h
+    dawn/src/dawn_wire/server/Server.cpp
+    dawn/src/dawn_wire/server/Server.h
+    dawn/src/dawn_wire/server/ServerBuffer.cpp
+    dawn/src/dawn_wire/server/ServerDevice.cpp
+    dawn/src/dawn_wire/server/ServerFence.cpp
+    dawn/src/dawn_wire/server/ServerInlineMemoryTransferService.cpp
+    dawn/src/dawn_wire/server/ServerQueue.cpp
 )
 
 target_link_libraries(dawn_wire
@@ -580,20 +580,20 @@ endif()
 ###############################################################################
 
 add_library(dawn_utils STATIC
-    ${dawn_root}/src/utils/ComboRenderBundleEncoderDescriptor.cpp
-    ${dawn_root}/src/utils/ComboRenderBundleEncoderDescriptor.h
-    ${dawn_root}/src/utils/ComboRenderPipelineDescriptor.cpp
-    ${dawn_root}/src/utils/ComboRenderPipelineDescriptor.h
-    ${dawn_root}/src/utils/DawnHelpers.cpp
-    ${dawn_root}/src/utils/DawnHelpers.h
-    ${dawn_root}/src/utils/SystemUtils.cpp
-    ${dawn_root}/src/utils/SystemUtils.h
-    ${dawn_root}/src/utils/TerribleCommandBuffer.cpp
-    ${dawn_root}/src/utils/TerribleCommandBuffer.h
-    ${dawn_root}/src/utils/Timer.h
-    $<$<PLATFORM_ID:Cygwin,MinGW,Windows>:${dawn_root}/src/utils/WindowsTimer.cpp>
-    $<$<PLATFORM_ID:Darwin>:${dawn_root}/src/utils/OSXTimer.cpp>
-    $<$<PLATFORM_ID:Linux>:${dawn_root}/src/utils/PosixTimer.cpp>
+    dawn/src/utils/ComboRenderBundleEncoderDescriptor.cpp
+    dawn/src/utils/ComboRenderBundleEncoderDescriptor.h
+    dawn/src/utils/ComboRenderPipelineDescriptor.cpp
+    dawn/src/utils/ComboRenderPipelineDescriptor.h
+    dawn/src/utils/DawnHelpers.cpp
+    dawn/src/utils/DawnHelpers.h
+    dawn/src/utils/SystemUtils.cpp
+    dawn/src/utils/SystemUtils.h
+    dawn/src/utils/TerribleCommandBuffer.cpp
+    dawn/src/utils/TerribleCommandBuffer.h
+    dawn/src/utils/Timer.h
+    $<$<PLATFORM_ID:Cygwin,MinGW,Windows>:dawn/src/utils/WindowsTimer.cpp>
+    $<$<PLATFORM_ID:Darwin>:dawn/src/utils/OSXTimer.cpp>
+    $<$<PLATFORM_ID:Linux>:dawn/src/utils/PosixTimer.cpp>
 )
 
 target_link_libraries(dawn_utils
@@ -608,13 +608,13 @@ target_link_libraries(dawn_utils
 )
 
 add_library(dawn_bindings STATIC
-    ${dawn_root}/src/utils/BackendBinding.cpp
-    ${dawn_root}/src/utils/BackendBinding.h
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_D3D12}>:${dawn_root}/src/utils/D3D12Binding.cpp>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_METAL}>:${dawn_root}/src/utils/MetalBinding.mm>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_NULL}>:${dawn_root}/src/utils/NullBinding.cpp>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_OPENGL}>:${dawn_root}/src/utils/OpenGLBinding.cpp>
-    $<$<BOOL:${DAWN_ENABLE_BACKEND_VULKAN}>:${dawn_root}/src/utils/VulkanBinding.cpp>
+    dawn/src/utils/BackendBinding.cpp
+    dawn/src/utils/BackendBinding.h
+    $<$<BOOL:${DAWN_ENABLE_BACKEND_D3D12}>:dawn/src/utils/D3D12Binding.cpp>
+    $<$<BOOL:${DAWN_ENABLE_BACKEND_METAL}>:dawn/src/utils/MetalBinding.mm>
+    $<$<BOOL:${DAWN_ENABLE_BACKEND_NULL}>:dawn/src/utils/NullBinding.cpp>
+    $<$<BOOL:${DAWN_ENABLE_BACKEND_OPENGL}>:dawn/src/utils/OpenGLBinding.cpp>
+    $<$<BOOL:${DAWN_ENABLE_BACKEND_VULKAN}>:dawn/src/utils/VulkanBinding.cpp>
 )
 
 target_link_libraries(dawn_bindings
@@ -636,8 +636,8 @@ if(DAWN_BUILD_SAMPLES)
 
     # Static library to contain code and dependencies common to all samples
     add_library(dawn_sample_utils STATIC
-        ${dawn_root}/examples/SampleUtils.cpp
-        ${dawn_root}/examples/SampleUtils.h
+        dawn/examples/SampleUtils.cpp
+        dawn/examples/SampleUtils.h
     )
     target_link_libraries(dawn_sample_utils
         PUBLIC
@@ -651,9 +651,12 @@ if(DAWN_BUILD_SAMPLES)
             dawn_internal
     )
 
+    unset(dawn_samples)
+
     macro(dawn_sample target_name)
         add_executable(${target_name} dawn/examples/${target_name})
-        target_link_libraries(${target_name} PUBLIC dawn_sample_utils)
+        target_link_libraries(${target_name} PRIVATE dawn_sample_utils)
+        list(APPEND dawn_samples ${target_name})
     endmacro()
 
     dawn_sample(CppHelloTriangle)
@@ -662,8 +665,8 @@ if(DAWN_BUILD_SAMPLES)
     dawn_sample(Animometer)
     dawn_sample(CubeReflection)
 
-    target_include_directories(ComputeBoids PUBLIC ${PROJECT_SOURCE_DIR}/third_party/glm)
-    target_include_directories(CubeReflection PUBLIC ${PROJECT_SOURCE_DIR}/third_party/glm)
+    target_include_directories(ComputeBoids PRIVATE ${PROJECT_SOURCE_DIR}/third_party/glm)
+    target_include_directories(CubeReflection PRIVATE ${PROJECT_SOURCE_DIR}/third_party/glm)
 
 endif()
 
@@ -713,6 +716,7 @@ install(
         dawn_public_include_dirs
         dawn_headers_gen
         dawn_utils
+        dawn_bindings
         dawn_internal
         dawn_native
         dawn_native_headers
@@ -737,6 +741,8 @@ install(
         spirv-cross-hlsl
         spirv-cross-msl
         spirv-cross-core
+        ${dawn_samples}
+        glfw
     EXPORT ${target_export_name}
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
@@ -746,18 +752,38 @@ install(
 
 install(
     DIRECTORY
-        ${PROJECT_SOURCE_DIR}/dawn/src/include/
+        dawn/src/include/
         ${PROJECT_BINARY_DIR}/src/include/
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
 )
 
 install(
-    FILES cmake/FindD3D12.cmake cmake/FindMetal.cmake
-    DESTINATION ${config_install_dir}
+    FILES
+        dawn/src/utils/BackendBinding.h
+        dawn/src/utils/ComboRenderBundleEncoderDescriptor.h
+        dawn/src/utils/ComboRenderPipelineDescriptor.h
+        dawn/src/utils/DawnHelpers.h
+        dawn/src/utils/SystemUtils.h
+        dawn/src/utils/TerribleCommandBuffer.h
+        dawn/src/utils/Timer.h
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/dawn/utils
+)
+
+# Technically, this file should be in include/common however the only users of
+# this header are in dawn/utils and is included with double quotes instead of
+# triangle brackets, so I made the decision to drop that required header in
+# include/dawn/utils/common instead.
+install(
+    FILES dawn/src/common/Constants.h
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/dawn/utils/common
 )
 
 install(
-    FILES ${project_config} ${version_config}
+    FILES
+        cmake/FindD3D12.cmake
+        cmake/FindMetal.cmake
+        ${project_config}
+        ${version_config}
     DESTINATION ${config_install_dir}
 )
 
