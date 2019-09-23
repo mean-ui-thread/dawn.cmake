@@ -20,6 +20,7 @@
 # SOFTWARE.
 
 include_guard(GLOBAL)
+include(HunterGate)
 
 ###############################################################################
 # Third-party dependencies needed by dawn_native
@@ -44,18 +45,6 @@ option(SPIRV_SKIP_EXECUTABLES "Skip building the executable and tests along with
 option(SPIRV_SKIP_TESTS "Skip building SPIRV-Tools tests" ON)
 option(ENABLE_GLSLANG_BINARIES "Builds glslangValidator and spirv-remap" OFF)
 add_subdirectory(third_party/shaderc)
-
-# glfw
-option(GLFW_BUILD_EXAMPLES "Build the GLFW example programs" OFF)
-option(GLFW_BUILD_TESTS "Build the GLFW test programs" OFF)
-option(GLFW_BUILD_DOCS "Build the GLFW documentation" OFF)
-option(GLFW_INSTALL "Generate installation target" OFF)
-if (CMAKE_C_FLAGS_${_BUILD_TYPE} MATCHES "/MD")
-    set(USE_MSVC_RUNTIME_LIBRARY_DLL ON CACHE BOOL "Use MSVC runtime library DLL" FORCE)
-else()
-    set(USE_MSVC_RUNTIME_LIBRARY_DLL OFF CACHE BOOL "Use MSVC runtime library DLL" FORCE)
-endif()
-add_subdirectory(third_party/glfw)
 
 # Empty targets to add the include dirs and list the sources of Khronos headers for header inclusion check.
 add_library(khronos_headers_public INTERFACE)

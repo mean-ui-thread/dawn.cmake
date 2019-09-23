@@ -1,12 +1,6 @@
 [submodule "dawn"]
 	path = dawn
 	url = https://dawn.googlesource.com/dawn
-[submodule "third_party/glfw"]
-	path = third_party/glfw
-	url = https://chromium.googlesource.com/external/github.com/glfw/glfw
-[submodule "third_party/glm"]
-	path = third_party/glm
-	url = https://chromium.googlesource.com/external/github.com/g-truc/glm.git
 [submodule "third_party/jinja2"]
 	path = third_party/jinja2
 	url = https://chromium.googlesource.com/chromium/src/third_party/jinja2
