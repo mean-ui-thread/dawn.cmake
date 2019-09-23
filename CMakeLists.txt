@@ -47,6 +47,7 @@ find_package(OpenGL QUIET)
 find_package(X11 QUIET)
 find_package(Vulkan QUIET)
 find_package(Python3 QUIET REQUIRED)
+find_package(Git QUIET REQUIRED)
 
 # https://docs.hunter.sh/en/latest/packages/pkg/glfw.html
 hunter_add_package(glfw)
@@ -67,6 +68,16 @@ option(DAWN_BUILD_SAMPLES "Builds Samples" ON)
 
 set(dawn_root ${PROJECT_SOURCE_DIR}/dawn)
 
+execute_process(
+    COMMAND Git::Git submodule update --init --recursive
+    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+)
+
+execute_process(
+    COMMAND ${Python3_EXECUTABLE} utils/git-sync-deps
+    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/third_party/shaderc
+)
+
 ################################################################################
 # Compiler flags
 ################################################################################
@@ -80,13 +91,180 @@ if (MSVC)
 endif()
 
 ###############################################################################
-# including targets, deps, configs, etc
+# Third-party dependencies needed by dawn_native
 ###############################################################################
 
-include(third_party.cmake)
-include(common.cmake)
-include(dawn.cmake)
-include(dawn_wire.cmake)
+# shaderc (includes glslang, SPIRV-Headers, SPIRV-Cross and SPIRV-Tools)
+if (CMAKE_C_FLAGS_${_BUILD_TYPE} MATCHES "/MD")
+    set(SHADERC_ENABLE_SHARED_CRT ON CACHE BOOL "Use the shared CRT instead of the static CRT" FORCE)
+else()
+    set(SHADERC_ENABLE_SHARED_CRT OFF CACHE BOOL "Use the shared CRT instead of the static CRT" FORCE)
+endif()
+set(SHADERC_ENABLE_SPVC ON CACHE BOOL "Enable libshaderc_spvc" FORCE) # for SPIRV-Cross
+option(SHADERC_SKIP_INSTALL "Skip installation" ON)
+option(SHADERC_SKIP_TESTS "Skip building tests" ON)
+option(SPIRV_CROSS_ENABLE_TESTS "Enable SPIRV-Cross tests." OFF)
+option(SPIRV_CROSS_SKIP_INSTALL "Skips installation targets." ON)
+option(SPIRV_SKIP_EXECUTABLES "Skip building the executable and tests along with the library" ON)
+option(SPIRV_SKIP_TESTS "Skip building SPIRV-Tools tests" ON)
+option(ENABLE_GLSLANG_BINARIES "Builds glslangValidator and spirv-remap" OFF)
+add_subdirectory(third_party/shaderc)
+
+# Empty targets to add the include dirs and list the sources of Khronos headers for header inclusion check.
+add_library(khronos_headers_public INTERFACE)
+target_include_directories(khronos_headers_public INTERFACE ${dawn_root}/third_party/khronos)
+
+add_library(vulkan_headers_config INTERFACE)
+target_include_directories(vulkan_headers_config INTERFACE ${dawn_root}/third_party/khronos)
+target_compile_definitions(vulkan_headers_config INTERFACE
+    $<$<PLATFORM_ID:Cygwin,MinGW,Windows>:VK_USE_PLATFORM_WIN32_KHR>
+    $<$<PLATFORM_ID:Linux>:VK_USE_PLATFORM_XCB_KHR>
+    $<$<PLATFORM_ID:Android>:VK_USE_PLATFORM_ANDROID_KHR>
+)
+
+add_library(vulkan_headers INTERFACE)
+target_sources(vulkan_headers INTERFACE
+    $<BUILD_INTERFACE:
+        ${dawn_root}/third_party/khronos/vulkan/vk_icd.h
+        ${dawn_root}/third_party/khronos/vulkan/vk_layer.h
+        ${dawn_root}/third_party/khronos/vulkan/vk_platform.h
+        ${dawn_root}/third_party/khronos/vulkan/vk_sdk_platform.h
+        ${dawn_root}/third_party/khronos/vulkan/vulkan.h
+        ${dawn_root}/third_party/khronos/vulkan/vulkan_core.h
+    >
+)
+target_link_libraries(vulkan_headers INTERFACE vulkan_headers_config)
+
+add_library(khronos_platform INTERFACE)
+target_sources(khronos_platform INTERFACE
+    $<BUILD_INTERFACE:${dawn_root}/third_party/khronos/KHR/khrplatform.h>
+)
+target_link_libraries(khronos_platform INTERFACE khronos_headers_public)
+
+
+###############################################################################
+# Common dawn configs
+###############################################################################
+
+add_library(dawn_public_include_dirs INTERFACE)
+target_include_directories(dawn_public_include_dirs INTERFACE
+    $<BUILD_INTERFACE:${dawn_root}/src/include>
+    $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/src>
+    $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/src/include>
+)
+
+add_library(dawn_internal INTERFACE)
+target_include_directories(dawn_internal INTERFACE
+    $<BUILD_INTERFACE:${dawn_root}/src>
+)
+target_compile_definitions(dawn_internal INTERFACE
+        $<$<BOOL:${DAWN_ENABLE_ASSERTS}>:DAWN_ENABLE_ASSERTS=1>
+        $<$<BOOL:${DAWN_ENABLE_BACKEND_D3D12}>:DAWN_ENABLE_BACKEND_D3D12>
+        $<$<BOOL:${DAWN_ENABLE_BACKEND_METAL}>:DAWN_ENABLE_BACKEND_METAL>
+        $<$<BOOL:${DAWN_ENABLE_BACKEND_NULL}>:DAWN_ENABLE_BACKEND_NULL>
+        $<$<BOOL:${DAWN_ENABLE_BACKEND_OPENGL}>:DAWN_ENABLE_BACKEND_OPENGL>
+        $<$<BOOL:${DAWN_ENABLE_BACKEND_VULKAN}>:DAWN_ENABLE_BACKEND_VULKAN>
+        $<$<BOOL:${X11_FOUND}>:DAWN_USE_X11>
+        $<$<PLATFORM_ID:Cygwin,MinGW,Windows>:NOMINMAX>
+        $<$<PLATFORM_ID:Cygwin,MinGW,Windows>:_CRT_SECURE_NO_WARNINGS>
+)
+
+###############################################################################
+# Common dawn library
+###############################################################################
+
+add_library(dawn_common STATIC
+    dawn/src/common/Assert.cpp
+    dawn/src/common/Assert.h
+    dawn/src/common/BitSetIterator.h
+    dawn/src/common/Compiler.h
+    dawn/src/common/Constants.h
+    dawn/src/common/DynamicLib.cpp
+    dawn/src/common/DynamicLib.h
+    dawn/src/common/HashUtils.h
+    dawn/src/common/Math.cpp
+    dawn/src/common/Math.h
+    dawn/src/common/Platform.h
+    dawn/src/common/Result.cpp
+    dawn/src/common/Result.h
+    dawn/src/common/Serial.h
+    dawn/src/common/SerialMap.h
+    dawn/src/common/SerialQueue.h
+    dawn/src/common/SerialStorage.h
+    dawn/src/common/SwapChainUtils.h
+    dawn/src/common/vulkan_platform.h
+    dawn/src/common/windows_with_undefs.h
+)
+target_link_libraries(dawn_common
+    PUBLIC
+        dawn_internal
+        $<$<BOOL:DAWN_ENABLE_BACKEND_VULKAN>:vulkan_headers>
+    PRIVATE dawn_headers
+)
+
+###############################################################################
+# Dawn headers
+###############################################################################
+
+dawn_json_generator(dawn_headers_gen
+    target
+        dawn_headers
+    outputs
+        ${PROJECT_BINARY_DIR}/src/include/dawn/dawncpp.h
+        ${PROJECT_BINARY_DIR}/src/include/dawn/dawn.h
+)
+
+add_library(dawn_headers INTERFACE)
+target_link_libraries(dawn_headers INTERFACE dawn_public_include_dirs dawn_headers_gen)
+target_sources(dawn_headers INTERFACE
+    $<BUILD_INTERFACE:
+        ${PROJECT_SOURCE_DIR}/dawn/src/include/dawn/EnumClassBitmasks.h
+        ${PROJECT_SOURCE_DIR}/dawn/src/include/dawn/dawn_export.h
+        ${PROJECT_SOURCE_DIR}/dawn/src/include/dawn/dawn_wsi.h
+    >
+)
+
+################################################################################
+# dawn
+################################################################################
+
+dawn_json_generator(dawn_gen
+    target
+        libdawn
+    outputs
+        ${PROJECT_BINARY_DIR}/src/dawn/dawncpp.cpp
+        ${PROJECT_BINARY_DIR}/src/dawn/dawn.c
+)
+
+add_library(dawn)
+target_link_libraries(dawn
+    PUBLIC dawn_headers
+    PRIVATE dawn_gen
+)
+if (BUILD_SHARED_LIBS)
+    target_compile_definitions(dawn PUBLIC
+        DAWN_SHARED_LIBRARY
+        DAWN_IMPLEMENTATION
+    )
+endif()
+
+###############################################################################
+# dawn_wire_headers
+###############################################################################
+
+add_library(dawn_wire_headers INTERFACE)
+target_link_libraries(dawn_wire_headers INTERFACE
+    dawn_headers
+    dawn_public_include_dirs
+)
+target_sources(dawn_wire_headers INTERFACE
+    $<BUILD_INTERFACE:
+        ${dawn_root}/src/include/dawn_wire/Wire.h
+        ${dawn_root}/src/include/dawn_wire/WireClient.h
+        ${dawn_root}/src/include/dawn_wire/WireServer.h
+        ${dawn_root}/src/include/dawn_wire/dawn_wire_export.h
+    >
+)
 
 ###############################################################################
 # dawn_platform
