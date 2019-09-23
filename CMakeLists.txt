@@ -112,10 +112,14 @@ add_subdirectory(third_party/shaderc)
 
 # Empty targets to add the include dirs and list the sources of Khronos headers for header inclusion check.
 add_library(khronos_headers_public INTERFACE)
-target_include_directories(khronos_headers_public INTERFACE ${dawn_root}/third_party/khronos)
+target_include_directories(khronos_headers_public INTERFACE
+    $<BUILD_INTERFACE:${dawn_root}/third_party/khronos>
+)
 
 add_library(vulkan_headers_config INTERFACE)
-target_include_directories(vulkan_headers_config INTERFACE ${dawn_root}/third_party/khronos)
+target_include_directories(vulkan_headers_config INTERFACE
+    $<BUILD_INTERFACE:${dawn_root}/third_party/khronos>
+)
 target_compile_definitions(vulkan_headers_config INTERFACE
     $<$<PLATFORM_ID:Cygwin,MinGW,Windows>:VK_USE_PLATFORM_WIN32_KHR>
     $<$<PLATFORM_ID:Linux>:VK_USE_PLATFORM_XCB_KHR>
@@ -148,9 +152,11 @@ target_link_libraries(khronos_platform INTERFACE khronos_headers_public)
 
 add_library(dawn_public_include_dirs INTERFACE)
 target_include_directories(dawn_public_include_dirs INTERFACE
-    $<BUILD_INTERFACE:${dawn_root}/src/include>
-    $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/src>
-    $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/src/include>
+    $<BUILD_INTERFACE:
+        ${dawn_root}/src/include
+        ${PROJECT_BINARY_DIR}/src
+        ${PROJECT_BINARY_DIR}/src/include
+    >
 )
 
 add_library(dawn_internal INTERFACE)
@@ -158,15 +164,15 @@ target_include_directories(dawn_internal INTERFACE
     $<BUILD_INTERFACE:${dawn_root}/src>
 )
 target_compile_definitions(dawn_internal INTERFACE
-        $<$<BOOL:${DAWN_ENABLE_ASSERTS}>:DAWN_ENABLE_ASSERTS=1>
-        $<$<BOOL:${DAWN_ENABLE_BACKEND_D3D12}>:DAWN_ENABLE_BACKEND_D3D12>
-        $<$<BOOL:${DAWN_ENABLE_BACKEND_METAL}>:DAWN_ENABLE_BACKEND_METAL>
-        $<$<BOOL:${DAWN_ENABLE_BACKEND_NULL}>:DAWN_ENABLE_BACKEND_NULL>
-        $<$<BOOL:${DAWN_ENABLE_BACKEND_OPENGL}>:DAWN_ENABLE_BACKEND_OPENGL>
-        $<$<BOOL:${DAWN_ENABLE_BACKEND_VULKAN}>:DAWN_ENABLE_BACKEND_VULKAN>
-        $<$<BOOL:${X11_FOUND}>:DAWN_USE_X11>
-        $<$<PLATFORM_ID:Cygwin,MinGW,Windows>:NOMINMAX>
-        $<$<PLATFORM_ID:Cygwin,MinGW,Windows>:_CRT_SECURE_NO_WARNINGS>
+    $<$<BOOL:${DAWN_ENABLE_ASSERTS}>:DAWN_ENABLE_ASSERTS=1>
+    $<$<BOOL:${DAWN_ENABLE_BACKEND_D3D12}>:DAWN_ENABLE_BACKEND_D3D12>
+    $<$<BOOL:${DAWN_ENABLE_BACKEND_METAL}>:DAWN_ENABLE_BACKEND_METAL>
+    $<$<BOOL:${DAWN_ENABLE_BACKEND_NULL}>:DAWN_ENABLE_BACKEND_NULL>
+    $<$<BOOL:${DAWN_ENABLE_BACKEND_OPENGL}>:DAWN_ENABLE_BACKEND_OPENGL>
+    $<$<BOOL:${DAWN_ENABLE_BACKEND_VULKAN}>:DAWN_ENABLE_BACKEND_VULKAN>
+    $<$<BOOL:${X11_FOUND}>:DAWN_USE_X11>
+    $<$<PLATFORM_ID:Cygwin,MinGW,Windows>:NOMINMAX>
+    $<$<PLATFORM_ID:Cygwin,MinGW,Windows>:_CRT_SECURE_NO_WARNINGS>
 )
 
 ###############################################################################
@@ -198,8 +204,9 @@ add_library(dawn_common STATIC
 target_link_libraries(dawn_common
     PUBLIC
         dawn_internal
-        $<$<BOOL:DAWN_ENABLE_BACKEND_VULKAN>:vulkan_headers>
-    PRIVATE dawn_headers
+        $<$<BOOL:DAWN_ENABLE_BACKEND_VULKAN>:$<BUILD_INTERFACE:vulkan_headers>>
+    PRIVATE
+        dawn_headers
 )
 
 ###############################################################################
@@ -349,9 +356,17 @@ target_link_libraries(dawn_native_sources INTERFACE
         spirv-cross-msl
         dawn_native_internal
         dawn_platform
-        $<$<BOOL:${DAWN_ENABLE_BACKEND_OPENGL}>:dawn_native_opengl_loader_gen>
-        $<$<BOOL:${DAWN_ENABLE_BACKEND_OPENGL}>:khronos_platform>
-        $<$<BOOL:${DAWN_ENABLE_BACKEND_VULKAN}>:vulkan_headers>
+        $<$<BOOL:${DAWN_ENABLE_BACKEND_OPENGL}>:
+           $<BUILD_INTERFACE:
+                dawn_native_opengl_loader_gen
+                khronos_platform
+           >
+        >
+        $<$<BOOL:${DAWN_ENABLE_BACKEND_VULKAN}>:
+            $<BUILD_INTERFACE:
+                vulkan_headers
+            >
+        >
         $<$<BOOL:${DAWN_ENABLE_BACKEND_D3D12}>:${D3D12_LIBRARIES}>
         $<$<BOOL:${DAWN_ENABLE_BACKEND_METAL}>:${METAL_LIBRARIES}>
         $<$<BOOL:${DAWN_ENABLE_BACKEND_OPENGL}>:${OPENGL_LIBRARIES}>
@@ -955,16 +970,16 @@ install(
         dawn/src/utils/SystemUtils.h
         dawn/src/utils/TerribleCommandBuffer.h
         dawn/src/utils/Timer.h
-    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/dawn/utils
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/utils
 )
 
-# Technically, this file should be in include/common however the only users of
-# this header are in dawn/utils and is included with double quotes instead of
-# triangle brackets, so I made the decision to drop that required header in
-# include/dawn/utils/common instead.
 install(
-    FILES dawn/src/common/Constants.h
-    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/dawn/utils/common
+    FILES
+        dawn/src/common/Assert.h
+        dawn/src/common/Compiler.h
+        dawn/src/common/Constants.h
+        dawn/src/common/Platform.h
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/common
 )
 
 install(
