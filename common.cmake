@@ -53,26 +53,26 @@ target_compile_definitions(dawn_internal INTERFACE
 ###############################################################################
 
 add_library(dawn_common STATIC
-    ${dawn_root}/src/common/Assert.cpp
-    ${dawn_root}/src/common/Assert.h
-    ${dawn_root}/src/common/BitSetIterator.h
-    ${dawn_root}/src/common/Compiler.h
-    ${dawn_root}/src/common/Constants.h
-    ${dawn_root}/src/common/DynamicLib.cpp
-    ${dawn_root}/src/common/DynamicLib.h
-    ${dawn_root}/src/common/HashUtils.h
-    ${dawn_root}/src/common/Math.cpp
-    ${dawn_root}/src/common/Math.h
-    ${dawn_root}/src/common/Platform.h
-    ${dawn_root}/src/common/Result.cpp
-    ${dawn_root}/src/common/Result.h
-    ${dawn_root}/src/common/Serial.h
-    ${dawn_root}/src/common/SerialMap.h
-    ${dawn_root}/src/common/SerialQueue.h
-    ${dawn_root}/src/common/SerialStorage.h
-    ${dawn_root}/src/common/SwapChainUtils.h
-    ${dawn_root}/src/common/vulkan_platform.h
-    ${dawn_root}/src/common/windows_with_undefs.h
+    dawn/src/common/Assert.cpp
+    dawn/src/common/Assert.h
+    dawn/src/common/BitSetIterator.h
+    dawn/src/common/Compiler.h
+    dawn/src/common/Constants.h
+    dawn/src/common/DynamicLib.cpp
+    dawn/src/common/DynamicLib.h
+    dawn/src/common/HashUtils.h
+    dawn/src/common/Math.cpp
+    dawn/src/common/Math.h
+    dawn/src/common/Platform.h
+    dawn/src/common/Result.cpp
+    dawn/src/common/Result.h
+    dawn/src/common/Serial.h
+    dawn/src/common/SerialMap.h
+    dawn/src/common/SerialQueue.h
+    dawn/src/common/SerialStorage.h
+    dawn/src/common/SwapChainUtils.h
+    dawn/src/common/vulkan_platform.h
+    dawn/src/common/windows_with_undefs.h
 )
 target_link_libraries(dawn_common
     PUBLIC
