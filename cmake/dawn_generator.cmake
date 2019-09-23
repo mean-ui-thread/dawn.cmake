@@ -76,7 +76,7 @@ function(dawn_generator target_name)
     )
 
     add_library(${target_name} INTERFACE)
-    target_sources(${target_name} INTERFACE ${IN_outputs})
+    target_sources(${target_name} INTERFACE $<BUILD_INTERFACE:${IN_outputs}>)
 endfunction()
 
 function(dawn_json_generator target_name)
