@@ -868,7 +868,7 @@ set(config_install_dir ${CMAKE_INSTALL_LIBDIR}/cmake/dawn)
 set(generated_dir ${CMAKE_CURRENT_BINARY_DIR}/generated)
 set(version_config ${generated_dir}/dawnConfigVersion.cmake)
 set(project_config ${generated_dir}/dawnConfig.cmake)
-set(target_export_name dawnTargets)
+set(TARGETS_EXPORT_NAME dawnTargets)
 set(namespace dawn::)
 
 write_basic_package_version_file(
@@ -932,7 +932,7 @@ install(
         spirv-cross-msl
         spirv-cross-core
         ${dawn_samples}
-    EXPORT ${target_export_name}
+    EXPORT ${TARGETS_EXPORT_NAME}
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
@@ -977,7 +977,7 @@ install(
 )
 
 install(
-    EXPORT ${target_export_name}
+    EXPORT ${TARGETS_EXPORT_NAME}
     NAMESPACE ${namespace}
     DESTINATION ${config_install_dir}
 )
