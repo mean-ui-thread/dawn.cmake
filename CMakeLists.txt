@@ -137,13 +137,13 @@ target_sources(vulkan_headers INTERFACE
         ${dawn_root}/third_party/khronos/vulkan/vulkan_core.h
     >
 )
-target_link_libraries(vulkan_headers INTERFACE vulkan_headers_config)
+target_link_libraries(vulkan_headers INTERFACE $<BUILD_INTERFACE:vulkan_headers_config>)
 
 add_library(khronos_platform INTERFACE)
 target_sources(khronos_platform INTERFACE
     $<BUILD_INTERFACE:${dawn_root}/third_party/khronos/KHR/khrplatform.h>
 )
-target_link_libraries(khronos_platform INTERFACE khronos_headers_public)
+target_link_libraries(khronos_platform INTERFACE $<BUILD_INTERFACE:khronos_headers_public>)
 
 
 ###############################################################################
@@ -173,6 +173,33 @@ target_compile_definitions(dawn_internal INTERFACE
     $<$<BOOL:${X11_FOUND}>:DAWN_USE_X11>
     $<$<PLATFORM_ID:Cygwin,MinGW,Windows>:NOMINMAX>
     $<$<PLATFORM_ID:Cygwin,MinGW,Windows>:_CRT_SECURE_NO_WARNINGS>
+)
+
+###############################################################################
+# Dawn headers
+###############################################################################
+
+dawn_json_generator(dawn_headers_gen
+    target
+        dawn_headers
+    outputs
+        ${PROJECT_BINARY_DIR}/src/include/dawn/dawncpp.h
+        ${PROJECT_BINARY_DIR}/src/include/dawn/dawn.h
+)
+
+add_library(dawn_headers INTERFACE)
+target_link_libraries(dawn_headers INTERFACE
+    $<BUILD_INTERFACE:
+        dawn_public_include_dirs
+        dawn_headers_gen
+    >
+)
+target_sources(dawn_headers INTERFACE
+    $<BUILD_INTERFACE:
+        ${PROJECT_SOURCE_DIR}/dawn/src/include/dawn/EnumClassBitmasks.h
+        ${PROJECT_SOURCE_DIR}/dawn/src/include/dawn/dawn_export.h
+        ${PROJECT_SOURCE_DIR}/dawn/src/include/dawn/dawn_wsi.h
+    >
 )
 
 ###############################################################################
@@ -206,29 +233,7 @@ target_link_libraries(dawn_common
         dawn_internal
         $<$<BOOL:DAWN_ENABLE_BACKEND_VULKAN>:$<BUILD_INTERFACE:vulkan_headers>>
     PRIVATE
-        dawn_headers
-)
-
-###############################################################################
-# Dawn headers
-###############################################################################
-
-dawn_json_generator(dawn_headers_gen
-    target
-        dawn_headers
-    outputs
-        ${PROJECT_BINARY_DIR}/src/include/dawn/dawncpp.h
-        ${PROJECT_BINARY_DIR}/src/include/dawn/dawn.h
-)
-
-add_library(dawn_headers INTERFACE)
-target_link_libraries(dawn_headers INTERFACE dawn_public_include_dirs dawn_headers_gen)
-target_sources(dawn_headers INTERFACE
-    $<BUILD_INTERFACE:
-        ${PROJECT_SOURCE_DIR}/dawn/src/include/dawn/EnumClassBitmasks.h
-        ${PROJECT_SOURCE_DIR}/dawn/src/include/dawn/dawn_export.h
-        ${PROJECT_SOURCE_DIR}/dawn/src/include/dawn/dawn_wsi.h
-    >
+        $<BUILD_INTERFACE:dawn_headers>
 )
 
 ################################################################################
@@ -245,8 +250,8 @@ dawn_json_generator(dawn_gen
 
 add_library(dawn)
 target_link_libraries(dawn
-    PUBLIC dawn_headers
-    PRIVATE dawn_gen
+    PUBLIC $<BUILD_INTERFACE:dawn_headers>
+    PRIVATE $<BUILD_INTERFACE:dawn_gen>
 )
 if (BUILD_SHARED_LIBS)
     target_compile_definitions(dawn PUBLIC
@@ -261,8 +266,7 @@ endif()
 
 add_library(dawn_wire_headers INTERFACE)
 target_link_libraries(dawn_wire_headers INTERFACE
-    dawn_headers
-    dawn_public_include_dirs
+    $<BUILD_INTERFACE:dawn_headers>
 )
 target_sources(dawn_wire_headers INTERFACE
     $<BUILD_INTERFACE:
@@ -326,7 +330,9 @@ endif()
 # Public dawn_native headers so they can be publically visible for
 # dependencies of dawn_native
 add_library(dawn_native_headers INTERFACE)
-target_link_libraries(dawn_native_headers INTERFACE dawn_headers dawn_public_include_dirs)
+target_link_libraries(dawn_native_headers INTERFACE
+    $<BUILD_INTERFACE:dawn_headers>
+)
 target_sources(dawn_native_headers INTERFACE
     $<BUILD_INTERFACE:
         ${dawn_root}/src/include/dawn_native/DawnNative.h
@@ -347,25 +353,21 @@ target_sources(dawn_native_headers INTERFACE
 # except those that define exported symbols.
 add_library(dawn_native_sources INTERFACE)
 target_link_libraries(dawn_native_sources INTERFACE
-        dawn_native_headers
-        dawn_native_utils_gen
+        $<BUILD_INTERFACE:dawn_native_headers>
+        $<BUILD_INTERFACE:dawn_native_utils_gen>
         dawn_common
         SPIRV-Tools
         spirv-cross-glsl
         spirv-cross-hlsl
         spirv-cross-msl
-        dawn_native_internal
-        dawn_platform
+        $<BUILD_INTERFACE:dawn_native_internal>
+        $<BUILD_INTERFACE:dawn_platform>
         $<$<BOOL:${DAWN_ENABLE_BACKEND_OPENGL}>:
-           $<BUILD_INTERFACE:
-                dawn_native_opengl_loader_gen
-                khronos_platform
-           >
+           $<BUILD_INTERFACE:dawn_native_opengl_loader_gen>
+           $<BUILD_INTERFACE:khronos_platform>
         >
         $<$<BOOL:${DAWN_ENABLE_BACKEND_VULKAN}>:
-            $<BUILD_INTERFACE:
-                vulkan_headers
-            >
+            $<BUILD_INTERFACE:vulkan_headers>
         >
         $<$<BOOL:${DAWN_ENABLE_BACKEND_D3D12}>:${D3D12_LIBRARIES}>
         $<$<BOOL:${DAWN_ENABLE_BACKEND_METAL}>:${METAL_LIBRARIES}>
@@ -697,12 +699,12 @@ add_library(dawn_native
 
 target_link_libraries(dawn_native
     PUBLIC
-        dawn_native_headers
+        $<BUILD_INTERFACE:dawn_native_headers>
 
     PRIVATE
-        dawn_native_sources
+        $<BUILD_INTERFACE:dawn_native_sources>
         dawn_common
-        dawn_native_internal
+        $<BUILD_INTERFACE:dawn_native_internal>
 )
 
 if (BUILD_SHARED_LIBS)
@@ -765,11 +767,11 @@ add_library(dawn_wire
 
 target_link_libraries(dawn_wire
     PUBLIC
-        dawn_wire_headers
-    PRIVATE
-        dawn_wire_gen
-        dawn_common
+        $<BUILD_INTERFACE:dawn_wire_headers>
         dawn_internal
+    PRIVATE
+        $<BUILD_INTERFACE:dawn_wire_gen>
+        dawn_common
 )
 
 if (BUILD_SHARED_LIBS)
@@ -802,9 +804,9 @@ add_library(dawn_utils STATIC
 
 target_link_libraries(dawn_utils
     PUBLIC
-        dawn_headers
-    PRIVATE
+        $<BUILD_INTERFACE:dawn_headers>
         dawn_internal
+    PRIVATE
         dawn_native
         dawn_wire
         dawn_common
@@ -823,9 +825,9 @@ add_library(dawn_bindings STATIC
 
 target_link_libraries(dawn_bindings
     PUBLIC
-        dawn_headers
-    PRIVATE
+        $<BUILD_INTERFACE:dawn_headers>
         dawn_internal
+    PRIVATE
         glfw
         dawn_native
         dawn_common
@@ -856,7 +858,6 @@ if(DAWN_BUILD_SAMPLES)
             dawn_wire
             dawn_common
             dawn
-            dawn_internal
     )
 
     unset(dawn_samples)
@@ -916,23 +917,12 @@ set_property(TARGET glslang PROPERTY INTERFACE_INCLUDE_DIRECTORIES $<BUILD_INTER
 install(
     TARGETS
         dawn
-        dawn_headers
-        dawn_gen
-        dawn_public_include_dirs
-        dawn_headers_gen
         dawn_utils
         dawn_bindings
         dawn_internal
         dawn_native
-        dawn_native_headers
-        dawn_native_sources
-        dawn_native_utils_gen
-        dawn_native_internal
         dawn_wire
-        dawn_wire_headers
-        dawn_wire_gen
         dawn_common
-        dawn_platform
         shaderc
         glslang
         OSDependent
