@@ -228,12 +228,10 @@ add_library(dawn_common STATIC
     dawn/src/common/vulkan_platform.h
     dawn/src/common/windows_with_undefs.h
 )
-target_link_libraries(dawn_common
-    PUBLIC
-        dawn_internal
-        $<$<BOOL:DAWN_ENABLE_BACKEND_VULKAN>:$<BUILD_INTERFACE:vulkan_headers>>
-    PRIVATE
-        $<BUILD_INTERFACE:dawn_headers>
+target_link_libraries(dawn_common PUBLIC
+    dawn_internal
+    $<BUILD_INTERFACE:dawn_headers>
+    $<$<BOOL:DAWN_ENABLE_BACKEND_VULKAN>:$<BUILD_INTERFACE:vulkan_headers>>
 )
 
 ################################################################################
@@ -249,9 +247,9 @@ dawn_json_generator(dawn_gen
 )
 
 add_library(dawn)
-target_link_libraries(dawn
-    PUBLIC $<BUILD_INTERFACE:dawn_headers>
-    PRIVATE $<BUILD_INTERFACE:dawn_gen>
+target_link_libraries(dawn PUBLIC
+    $<BUILD_INTERFACE:dawn_gen>
+    $<BUILD_INTERFACE:dawn_headers>
 )
 if (BUILD_SHARED_LIBS)
     target_compile_definitions(dawn PUBLIC
@@ -282,7 +280,7 @@ target_sources(dawn_wire_headers INTERFACE
 ###############################################################################
 
 add_library(dawn_platform INTERFACE)
-target_link_libraries(dawn_platform INTERFACE dawn_internal dawn_common)
+target_link_libraries(dawn_platform INTERFACE dawn_common)
 target_sources(dawn_platform INTERFACE
     $<BUILD_INTERFACE:
         ${PROJECT_SOURCE_DIR}/dawn/src/include/dawn_platform/DawnPlatform.h
@@ -355,11 +353,6 @@ add_library(dawn_native_sources INTERFACE)
 target_link_libraries(dawn_native_sources INTERFACE
         $<BUILD_INTERFACE:dawn_native_headers>
         $<BUILD_INTERFACE:dawn_native_utils_gen>
-        dawn_common
-        SPIRV-Tools
-        spirv-cross-glsl
-        spirv-cross-hlsl
-        spirv-cross-msl
         $<BUILD_INTERFACE:dawn_native_internal>
         $<BUILD_INTERFACE:dawn_platform>
         $<$<BOOL:${DAWN_ENABLE_BACKEND_OPENGL}>:
@@ -697,14 +690,15 @@ add_library(dawn_native
     $<$<BOOL:${DAWN_ENABLE_BACKEND_VULKAN}>:dawn/src/dawn_native/vulkan/VulkanBackend.cpp>
 )
 
-target_link_libraries(dawn_native
-    PUBLIC
-        $<BUILD_INTERFACE:dawn_native_headers>
-
-    PRIVATE
-        $<BUILD_INTERFACE:dawn_native_sources>
-        dawn_common
-        $<BUILD_INTERFACE:dawn_native_internal>
+target_link_libraries(dawn_native PUBLIC
+    $<BUILD_INTERFACE:dawn_native_headers>
+    $<BUILD_INTERFACE:dawn_native_sources>
+    $<BUILD_INTERFACE:dawn_native_internal>
+    dawn_common
+    SPIRV-Tools
+    spirv-cross-glsl
+    spirv-cross-hlsl
+    spirv-cross-msl
 )
 
 if (BUILD_SHARED_LIBS)
@@ -765,13 +759,10 @@ add_library(dawn_wire
     dawn/src/dawn_wire/server/ServerQueue.cpp
 )
 
-target_link_libraries(dawn_wire
-    PUBLIC
-        $<BUILD_INTERFACE:dawn_wire_headers>
-        dawn_internal
-    PRIVATE
-        $<BUILD_INTERFACE:dawn_wire_gen>
-        dawn_common
+target_link_libraries(dawn_wire PUBLIC
+    $<BUILD_INTERFACE:dawn_wire_headers>
+    $<BUILD_INTERFACE:dawn_wire_gen>
+    dawn_common
 )
 
 if (BUILD_SHARED_LIBS)
@@ -802,15 +793,11 @@ add_library(dawn_utils STATIC
     $<$<PLATFORM_ID:Linux>:dawn/src/utils/PosixTimer.cpp>
 )
 
-target_link_libraries(dawn_utils
-    PUBLIC
-        $<BUILD_INTERFACE:dawn_headers>
-        dawn_internal
-    PRIVATE
-        dawn_native
-        dawn_wire
-        dawn_common
-        shaderc
+target_link_libraries(dawn_utils PUBLIC
+    dawn_native
+    dawn_wire
+    dawn_common
+    shaderc
 )
 
 add_library(dawn_bindings STATIC
@@ -823,15 +810,11 @@ add_library(dawn_bindings STATIC
     $<$<BOOL:${DAWN_ENABLE_BACKEND_VULKAN}>:dawn/src/utils/VulkanBinding.cpp>
 )
 
-target_link_libraries(dawn_bindings
-    PUBLIC
-        $<BUILD_INTERFACE:dawn_headers>
-        dawn_internal
-    PRIVATE
-        glfw
-        dawn_native
-        dawn_common
-        $<$<BOOL:${DAWN_ENABLE_BACKEND_METAL}>:${METAL_LIBRARIES}>
+target_link_libraries(dawn_bindings PUBLIC
+    glfw
+    dawn_native
+    dawn_common
+    $<$<BOOL:${DAWN_ENABLE_BACKEND_METAL}>:${METAL_LIBRARIES}>
 )
 
 ###############################################################################
@@ -842,7 +825,7 @@ if(DAWN_BUILD_SAMPLES)
 
     # https://docs.hunter.sh/en/latest/packages/pkg/glm.html
     hunter_add_package(glm)
-    find_package(glm REQUIRED)
+    find_package(glm CONFIG REQUIRED)
 
     # Static library to contain code and dependencies common to all samples
     add_library(dawn_sample_utils STATIC
@@ -852,11 +835,7 @@ if(DAWN_BUILD_SAMPLES)
     target_link_libraries(dawn_sample_utils
         PUBLIC
             dawn_bindings
-            glfw
             dawn_utils
-            dawn_native
-            dawn_wire
-            dawn_common
             dawn
     )
 
@@ -899,20 +878,51 @@ configure_package_config_file(
     INSTALL_DESTINATION ${config_install_dir}
 )
 
-# some targets from shaderc have absolute build paths in their
+##
+# Some targets from shaderc and dependents have absolute build paths in their
 # INTERFACE_INCLUDE_DIRECTORIES. So let's fix that by hiding them from the
-# install package by marking them as BUILD_INTERFACE.
+# install package by marking them as BUILD_INTERFACE. This will need to be fixed
+# upstream in :
+#    https://github.com/google/shaderc
+#    https://github.com/KhronosGroup/glslang
+##
+get_property(shaderc_include_directory TARGET shaderc PROPERTY INTERFACE_INCLUDE_DIRECTORIES)
+set_property(TARGET shaderc PROPERTY INTERFACE_INCLUDE_DIRECTORIES $<BUILD_INTERFACE:${shaderc_include_directory}>)
+get_property(glslang_include_directory TARGET glslang PROPERTY INTERFACE_INCLUDE_DIRECTORIES)
+set_property(TARGET glslang PROPERTY INTERFACE_INCLUDE_DIRECTORIES $<BUILD_INTERFACE:${glslang_include_directory}>)
+get_property(shaderc_util_include_directory TARGET shaderc_util PROPERTY INTERFACE_INCLUDE_DIRECTORIES)
+set_property(TARGET shaderc_util PROPERTY INTERFACE_INCLUDE_DIRECTORIES $<BUILD_INTERFACE:${shaderc_util_include_directory}>)
 get_property(spirv_include_directory TARGET SPIRV PROPERTY INTERFACE_INCLUDE_DIRECTORIES)
 set_property(TARGET SPIRV PROPERTY INTERFACE_INCLUDE_DIRECTORIES $<BUILD_INTERFACE:${spirv_include_directory}>)
 
-get_property(shaderc_include_directory TARGET shaderc PROPERTY INTERFACE_INCLUDE_DIRECTORIES)
-set_property(TARGET shaderc PROPERTY INTERFACE_INCLUDE_DIRECTORIES $<BUILD_INTERFACE:${shaderc_include_directory}>)
+##
+# Another mistake found in SPIRV-Tools, where their
+# INTERFACE_INCLUDE_DIRECTORIES points to nonexistant
+# ${_IMPORT_PREFIX}/include/include. Because we're not using SPIRV-Tools headers
+# directly (dawn uses it, but users of dawn most likely won't). This will need
+# to be fixed upstream in :
+#     https://github.com/KhronosGroup/SPIRV-Tools
+##
+get_property(SPIRV-Tools_include_directory TARGET SPIRV-Tools PROPERTY INTERFACE_INCLUDE_DIRECTORIES)
+set_property(TARGET SPIRV-Tools PROPERTY INTERFACE_INCLUDE_DIRECTORIES $<BUILD_INTERFACE:${SPIRV-Tools_include_directory}>)
+get_property(SPIRV-Tools-opt_include_directory TARGET SPIRV-Tools-opt PROPERTY INTERFACE_INCLUDE_DIRECTORIES)
+set_property(TARGET SPIRV-Tools-opt PROPERTY INTERFACE_INCLUDE_DIRECTORIES $<BUILD_INTERFACE:${SPIRV-Tools-opt_include_directory}>)
 
-get_property(shaderc_util_include_directory TARGET shaderc_util PROPERTY INTERFACE_INCLUDE_DIRECTORIES)
-set_property(TARGET shaderc_util PROPERTY INTERFACE_INCLUDE_DIRECTORIES $<BUILD_INTERFACE:${shaderc_util_include_directory}>)
-
-get_property(glslang_include_directory TARGET glslang PROPERTY INTERFACE_INCLUDE_DIRECTORIES)
-set_property(TARGET glslang PROPERTY INTERFACE_INCLUDE_DIRECTORIES $<BUILD_INTERFACE:${glslang_include_directory}>)
+##
+# Similar thing in SPIRV-Cross... INTERFACE_INCLUDE_DIRECTORIES points to
+# nonexistant ${_IMPORT_PREFIX}/include/spirv-cross, most likely happening
+# because we are enabling SPIRV_CROSS_SKIP_INSTALL because it seems to be
+# broken right now. Either way, this will need to be fixed upstream in :
+#     https://github.com/KhronosGroup/SPIRV-Cross
+##
+get_property(spirv-cross-hlsl_include_directory TARGET spirv-cross-hlsl PROPERTY INTERFACE_INCLUDE_DIRECTORIES)
+set_property(TARGET spirv-cross-hlsl PROPERTY INTERFACE_INCLUDE_DIRECTORIES $<BUILD_INTERFACE:${spirv-cross-hlsl_include_directory}>)
+get_property(spirv-cross-msl_include_directory TARGET spirv-cross-msl PROPERTY INTERFACE_INCLUDE_DIRECTORIES)
+set_property(TARGET spirv-cross-msl PROPERTY INTERFACE_INCLUDE_DIRECTORIES $<BUILD_INTERFACE:${spirv-cross-msl_include_directory}>)
+get_property(spirv-cross-glsl_include_directory TARGET spirv-cross-glsl PROPERTY INTERFACE_INCLUDE_DIRECTORIES)
+set_property(TARGET spirv-cross-glsl PROPERTY INTERFACE_INCLUDE_DIRECTORIES $<BUILD_INTERFACE:${spirv-cross-glsl_include_directory}>)
+get_property(spirv-cross-core_include_directory TARGET spirv-cross-core PROPERTY INTERFACE_INCLUDE_DIRECTORIES)
+set_property(TARGET spirv-cross-core PROPERTY INTERFACE_INCLUDE_DIRECTORIES $<BUILD_INTERFACE:${spirv-cross-core_include_directory}>)
 
 install(
     TARGETS
@@ -929,12 +939,12 @@ install(
         OGLCompiler
         shaderc_util
         SPIRV
-        SPIRV-Tools-opt
         SPIRV-Tools
+        SPIRV-Tools-opt
         HLSL
-        spirv-cross-glsl
         spirv-cross-hlsl
         spirv-cross-msl
+        spirv-cross-glsl
         spirv-cross-core
         ${dawn_samples}
     EXPORT ${TARGETS_EXPORT_NAME}
