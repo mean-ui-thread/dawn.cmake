@@ -13,7 +13,7 @@ Google Dawn cmake build scripts with no ties to GN and depot_tools.
 ### Linux
 ```sh
 sudo apt update
-sudo apt install git cmake python3 python3 build-essential libgl1-mesa-dev libgles2-mesa-dev libvulkan-dev mesa-common-dev
+sudo apt install git cmake python2 python3 build-essential libgl1-mesa-dev libgles2-mesa-dev libvulkan-dev mesa-common-dev
 ```
 
 ## How to build
