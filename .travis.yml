@@ -21,6 +21,7 @@
 
 git:
   quiet: true
+  submodules: true
   depth: 1
 
 language: minimal
