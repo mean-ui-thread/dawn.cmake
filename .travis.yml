@@ -89,3 +89,17 @@ matrix:
         - cmake -B.build -H. -DCMAKE_C_COMPILER=$(which clang) -DCMAKE_CXX_COMPILER=$(which clang++) -DCMAKE_PREFIX_PATH=$(pwd)/.install
       script:
         - cmake --build .build --target install -- -j$(grep -c ^processor /proc/cpuinfo)
+
+    - os: windows
+      language: cpp
+      env: 
+        - PATH=/c/Python27:/c/Python37:/c/Python37/Scripts:$PATH
+      install: 
+        - choco install python python2
+      before_script:
+        - cmake -G "Visual Studio 15 2017" -A x64 -B.build -H. -DCMAKE_PREFIX_PATH=$(pwd)/.install
+      script:
+        - cmake --build .build --target install
+      cache:
+        directories:
+          - $HOME/.hunter
