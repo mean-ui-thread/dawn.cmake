@@ -52,7 +52,7 @@ matrix:
           - python3
       before_install:
         # Install Linuxbrew
-        - [ ! -d $HOME/.linuxbrew ] && git clone https://github.com/Homebrew/brew.git $HOME/.linuxbrew
+        - test -d $HOME/.linuxbrew ||  git clone https://github.com/Homebrew/brew.git $HOME/.linuxbrew
         - PATH="$HOME/.linuxbrew/bin:$PATH"
         - echo 'export PATH="$HOME/.linuxbrew/bin:$PATH"' >>~/.bash_profile
         - export MANPATH="$(brew --prefix)/share/man:$MANPATH"
@@ -78,7 +78,7 @@ matrix:
           - python3
       before_install:
         # Install Linuxbrew
-        - [ ! -d $HOME/.linuxbrew ] && git clone https://github.com/Homebrew/brew.git $HOME/.linuxbrew
+        - test -d $HOME/.linuxbrew ||  git clone https://github.com/Homebrew/brew.git $HOME/.linuxbrew
         - PATH="$HOME/.linuxbrew/bin:$PATH"
         - echo 'export PATH="$HOME/.linuxbrew/bin:$PATH"' >>~/.bash_profile
         - export MANPATH="$(brew --prefix)/share/man:$MANPATH"
