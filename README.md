@@ -1,6 +1,9 @@
-  <a href="https://opensource.org/licenses/MIT">
-      <img src="https://img.shields.io/badge/License-MIT-0298c3.svg" alt="LICENSE"/>
-  </a>
+<a href="https://opensource.org/licenses/MIT">
+    <img src="https://img.shields.io/badge/License-MIT-0298c3.svg" alt="LICENSE"/>
+</a>
+<a href="(https://travis-ci.com/mchiasson/dawn.cmake">
+    <img src="https://travis-ci.com/mchiasson/dawn.cmake.svg?branch=master" alt="Build Status"/>
+</a>
 
 # dawn.cmake
 Google Dawn cmake build scripts with no ties to GN and depot_tools.
