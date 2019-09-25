@@ -93,7 +93,7 @@ matrix:
     - os: windows
       language: cpp
       env: 
-        - PATH=/c/Python27:/c/Python37:/c/Python37/Scripts:$PATH
+        - PATH=/c/Python37:/c/Python37/Scripts:/c/Python27:$PATH
       install: 
         - choco install cmake python python2
       before_script:
