@@ -45,7 +45,7 @@ matrix:
           - libgl1-mesa-dev
           - libvulkan-dev
           - mesa-common-dev
-          - python2
+          - python2.7
           - python3
       script:
         - cmake -B.build -H. -DCMAKE_C_COMPILER=$(which clang) -DCMAKE_CXX_COMPILER=$(which clang++) -DCMAKE_PREFIX_PATH=$(pwd)/.install
@@ -61,7 +61,7 @@ matrix:
           - libgl1-mesa-dev
           - libvulkan-dev
           - mesa-common-dev
-          - python2
+          - python2.7
           - python3
       script:
         - cmake -B.build -H. -DCMAKE_C_COMPILER=$(which clang) -DCMAKE_CXX_COMPILER=$(which clang++) -DCMAKE_PREFIX_PATH=$(pwd)/.install
