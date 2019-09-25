@@ -1,9 +1,11 @@
-<a href="https://opensource.org/licenses/MIT">
-    <img src="https://img.shields.io/badge/License-MIT-0298c3.svg" alt="LICENSE"/>
-</a>
-<a href="(https://travis-ci.com/mchiasson/dawn.cmake">
-    <img src="https://travis-ci.com/mchiasson/dawn.cmake.svg?branch=master" alt="Build Status"/>
-</a>
+<p>
+    <a href="https://opensource.org/licenses/MIT">
+        <img src="https://img.shields.io/badge/License-MIT-0298c3.svg" alt="LICENSE"/>
+    </a>
+    <a href="(https://travis-ci.com/mchiasson/dawn.cmake">
+        <img src="https://travis-ci.com/mchiasson/dawn.cmake.svg?branch=master" alt="Build Status"/>
+    </a>
+</p>
 
 # dawn.cmake
 Google Dawn cmake build scripts with no ties to GN and depot_tools.
@@ -16,7 +18,7 @@ Google Dawn cmake build scripts with no ties to GN and depot_tools.
 ### Linux
 ```sh
 sudo apt update
-sudo apt install git cmake python2 python3 build-essential libgl1-mesa-dev libgles2-mesa-dev libvulkan-dev mesa-common-dev
+sudo apt install git cmake python2.7 python3 build-essential libgl1-mesa-dev libvulkan-dev mesa-common-dev
 ```
 
 ## How to build
