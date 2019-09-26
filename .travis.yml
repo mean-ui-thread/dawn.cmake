@@ -50,18 +50,16 @@ matrix:
           - mesa-common-dev
           - python2.7
           - python3
-      before_install:
-        # Install Linuxbrew
-        - test -d $HOME/.linuxbrew ||  git clone https://github.com/Homebrew/brew.git $HOME/.linuxbrew
+      script:
+        - test -f $HOME/.linuxbrew/bin/brew || git clone https://github.com/Homebrew/brew.git $HOME/.linuxbrew
         - PATH="$HOME/.linuxbrew/bin:$PATH"
         - echo 'export PATH="$HOME/.linuxbrew/bin:$PATH"' >>~/.bash_profile
         - export MANPATH="$(brew --prefix)/share/man:$MANPATH"
         - export INFOPATH="$(brew --prefix)/share/info:$INFOPATH"
-      install:
+        - brew --version
         - brew install cmake
-      before_script:
+        - cmake --version
         - cmake -B.build -H. -DCMAKE_C_COMPILER=$(which clang) -DCMAKE_CXX_COMPILER=$(which clang++) -DCMAKE_PREFIX_PATH=$(pwd)/.install
-      script:
         - cmake --build .build --target install -- -j$(grep -c ^processor /proc/cpuinfo)
 
     - os: linux
@@ -76,18 +74,16 @@ matrix:
           - mesa-common-dev
           - python2.7
           - python3
-      before_install:
-        # Install Linuxbrew
-        - test -d $HOME/.linuxbrew ||  git clone https://github.com/Homebrew/brew.git $HOME/.linuxbrew
+      script:
+        - test -f $HOME/.linuxbrew/bin/brew || git clone https://github.com/Homebrew/brew.git $HOME/.linuxbrew
         - PATH="$HOME/.linuxbrew/bin:$PATH"
         - echo 'export PATH="$HOME/.linuxbrew/bin:$PATH"' >>~/.bash_profile
         - export MANPATH="$(brew --prefix)/share/man:$MANPATH"
         - export INFOPATH="$(brew --prefix)/share/info:$INFOPATH"
-      install:
+        - brew --version
         - brew install cmake
-      before_script:
+        - cmake --version
         - cmake -B.build -H. -DCMAKE_C_COMPILER=$(which gcc) -DCMAKE_CXX_COMPILER=$(which g++) -DCMAKE_PREFIX_PATH=$(pwd)/.install
-      script:
         - cmake --build .build --target install -- -j$(grep -c ^processor /proc/cpuinfo)
 
     - os: windows
