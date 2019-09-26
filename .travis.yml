@@ -39,9 +39,9 @@ matrix:
   include:
 
     - os: linux
-      dist: xenial
+      dist: bionic
       compiler: clang
-      env: DAWN_BUILD=linux-xenial-clang
+      env: DAWN_BUILD=linux-bionic-clang
       addons:
         apt:
           packages:
@@ -65,9 +65,9 @@ matrix:
         - cmake --build .build --target install -- -j$(grep -c ^processor /proc/cpuinfo)
 
     - os: linux
-      dist: xenial
+      dist: bionic
       compiler: gcc
-      env: DAWN_BUILD=linux-xenial-gcc
+      env: DAWN_BUILD=linux-bionic-gcc
       addons:
         apt:
           packages:
@@ -86,7 +86,7 @@ matrix:
       install:
         - brew install cmake
       before_script:
-        - cmake -B.build -H. -DCMAKE_C_COMPILER=$(which clang) -DCMAKE_CXX_COMPILER=$(which clang++) -DCMAKE_PREFIX_PATH=$(pwd)/.install
+        - cmake -B.build -H. -DCMAKE_C_COMPILER=$(which gcc) -DCMAKE_CXX_COMPILER=$(which g++) -DCMAKE_PREFIX_PATH=$(pwd)/.install
       script:
         - cmake --build .build --target install -- -j$(grep -c ^processor /proc/cpuinfo)
 
