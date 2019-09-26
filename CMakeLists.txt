@@ -830,7 +830,6 @@ if(DAWN_BUILD_SAMPLES)
     macro(dawn_sample target_name)
         add_executable(${target_name} dawn/examples/${target_name})
         target_link_libraries(${target_name} PRIVATE dawn_sample_utils glm)
-        target_link_options(${target_name} PRIVATE $<$<CXX_COMPILER_ID:MSVC>:/NODEFAULTLIB:library>)
         list(APPEND dawn_samples ${target_name})
     endmacro()
 
