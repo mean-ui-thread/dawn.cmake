@@ -61,7 +61,7 @@ matrix:
 #        - brew install cmake
 #        - brew cleanup
 #      before_script:
-#        - cmake -B.build -H. -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=$(which clang) -DCMAKE_CXX_COMPILER=$(which clang++) -DCMAKE_PREFIX_PATH=$(pwd)/.install
+#        - cmake -B.build -H. -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=$(which clang) -DCMAKE_CXX_COMPILER=$(which clang++) -DCMAKE_INSTALL_PREFIX=$(pwd)/.install
 #      script:
 #        - cmake --build .build --target install -- -j$(grep -c ^processor /proc/cpuinfo)
 
@@ -88,7 +88,7 @@ matrix:
         - brew install cmake
         - brew cleanup
       before_script:
-        - cmake -B.build -H. -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=$(which gcc) -DCMAKE_CXX_COMPILER=$(which g++) -DCMAKE_PREFIX_PATH=$(pwd)/.install
+        - cmake -B.build -H. -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=$(which gcc) -DCMAKE_CXX_COMPILER=$(which g++) -DCMAKE_INSTALL_PREFIX=$(pwd)/.install
       script:
         - cmake --build .build --target install -- -j$(grep -c ^processor /proc/cpuinfo)
 
@@ -99,7 +99,7 @@ matrix:
       install: 
         - choco install cmake python python2
       before_script:
-        - cmake -G "Visual Studio 15 2017" -A x64 -B.build -H. -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH=$(pwd)/.install
+        - cmake -G "Visual Studio 15 2017" -A x64 -B.build -H. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$(pwd)/.install
       script:
         - cmake --build .build --target install
       cache:
