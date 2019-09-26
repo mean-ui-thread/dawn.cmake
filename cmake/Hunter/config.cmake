@@ -1,0 +1,1 @@
+hunter_config(glfw VERSION 3.3.0-f9923e9-p0 CMAKE_ARGS OpenGL_GL_PREFERENCE=GLVND)
