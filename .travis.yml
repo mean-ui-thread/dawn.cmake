@@ -57,7 +57,9 @@ matrix:
         - export MANPATH="$(brew --prefix)/share/man:$MANPATH"
         - export INFOPATH="$(brew --prefix)/share/info:$INFOPATH"
         - brew --version
+        - brew update
         - brew install cmake
+        - brew cleanup
         - cmake --version
         - cmake -B.build -H. -DCMAKE_C_COMPILER=$(which clang) -DCMAKE_CXX_COMPILER=$(which clang++) -DCMAKE_PREFIX_PATH=$(pwd)/.install
         - cmake --build .build --target install -- -j$(grep -c ^processor /proc/cpuinfo)
@@ -81,7 +83,9 @@ matrix:
         - export MANPATH="$(brew --prefix)/share/man:$MANPATH"
         - export INFOPATH="$(brew --prefix)/share/info:$INFOPATH"
         - brew --version
+        - brew update
         - brew install cmake
+        - brew cleanup
         - cmake --version
         - cmake -B.build -H. -DCMAKE_C_COMPILER=$(which gcc) -DCMAKE_CXX_COMPILER=$(which g++) -DCMAKE_PREFIX_PATH=$(pwd)/.install
         - cmake --build .build --target install -- -j$(grep -c ^processor /proc/cpuinfo)
