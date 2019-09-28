@@ -30,7 +30,6 @@ cache:
   timeout: 900
   directories: 
     - $HOME/.hunter
-    - $HOME/.linuxbrew
 
 notifications:
   email: false
@@ -50,16 +49,6 @@ matrix:
 #          - mesa-common-dev
 #          - python2.7
 #          - python3
-#      before_install:
-#        - test -f $HOME/.linuxbrew/bin/brew || git clone https://github.com/Homebrew/brew.git $HOME/.linuxbrew
-#        - PATH="$HOME/.linuxbrew/bin:$PATH"
-#        - echo 'export PATH="$HOME/.linuxbrew/bin:$PATH"' >>~/.bash_profile
-#        - export MANPATH="$(brew --prefix)/share/man:$MANPATH"
-#        - export INFOPATH="$(brew --prefix)/share/info:$INFOPATH"
-#        - brew update
-#      install:
-#        - brew install cmake
-#        - brew cleanup
 #      before_script:
 #        - cmake -B.build -H. -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=$(which clang) -DCMAKE_CXX_COMPILER=$(which clang++) -DCMAKE_INSTALL_PREFIX=$(pwd)/.install
 #      script:
@@ -77,16 +66,6 @@ matrix:
           - mesa-common-dev
           - python2.7
           - python3
-      before_install:
-        - test -f $HOME/.linuxbrew/bin/brew || git clone https://github.com/Homebrew/brew.git $HOME/.linuxbrew
-        - PATH="$HOME/.linuxbrew/bin:$PATH"
-        - echo 'export PATH="$HOME/.linuxbrew/bin:$PATH"' >>~/.bash_profile
-        - export MANPATH="$(brew --prefix)/share/man:$MANPATH"
-        - export INFOPATH="$(brew --prefix)/share/info:$INFOPATH"
-        - brew update
-      install:
-        - brew install cmake
-        - brew cleanup
       before_script:
         - cmake -B.build -H. -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=$(which gcc) -DCMAKE_CXX_COMPILER=$(which g++) -DCMAKE_INSTALL_PREFIX=$(pwd)/.install
       script:
@@ -97,7 +76,7 @@ matrix:
       env: 
         - PATH=/c/Python37:/c/Python37/Scripts:/c/Python27:$PATH
       install: 
-        - choco install cmake python python2
+        - choco install python python2
       before_script:
         - cmake -G "Visual Studio 15 2017" -A x64 -B.build -H. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$(pwd)/.install
       script:
