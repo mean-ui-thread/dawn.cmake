@@ -4,7 +4,7 @@
 Google Dawn cmake build scripts with no ties to GN and depot_tools.
 
 ## Build dependencies
--   [cmake 3.13+](https://cmake.org/)
+-   [cmake 3.2+](https://cmake.org/)
 -   [Python 2.7+](https://python.org/)
 -   [Python 3.6+](https://python.org/)
 
