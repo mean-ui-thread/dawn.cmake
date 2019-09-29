@@ -37,8 +37,8 @@ matrix:
 #      dist: bionic
 #      language: python
 #      python:
-#          - "2.7"
 #          - "3.6"
+#          - "2.7"
 #      compiler: clang
 #      env: DAWN_BUILD=linux-bionic-clang
 #      cache:
@@ -61,8 +61,8 @@ matrix:
       dist: bionic
       language: python
       python:
-          - "2.7"
           - "3.6"
+          - "2.7"
       compiler: gcc
       env: DAWN_BUILD=linux-bionic-gcc
       cache:
