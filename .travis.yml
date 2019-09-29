@@ -35,10 +35,7 @@ matrix:
 
 #    - os: linux
 #      dist: bionic
-#      language: python
-#      python:
-#          - "3.6"
-#          - "2.7"
+#      language: minimal
 #      compiler: clang
 #      env: DAWN_BUILD=linux-bionic-clang
 #      cache:
@@ -51,7 +48,6 @@ matrix:
 #          - libvulkan-dev
 #          - mesa-common-dev
 #          - python2.7
-#          - python3
 #      before_script:
 #        - cmake -B.build -H. -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=$(which clang) -DCMAKE_CXX_COMPILER=$(which clang++) -DCMAKE_INSTALL_PREFIX=$(pwd)/.install
 #      script:
@@ -59,10 +55,7 @@ matrix:
 
     - os: linux
       dist: bionic
-      language: python
-      python:
-          - "3.6"
-          - "2.7"
+      language: minimal
       compiler: gcc
       env: DAWN_BUILD=linux-bionic-gcc
       cache:
@@ -74,6 +67,7 @@ matrix:
           - libgl1-mesa-dev
           - libvulkan-dev
           - mesa-common-dev
+          - python2.7
       before_script:
         - cmake -B.build -H. -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=$(which gcc) -DCMAKE_CXX_COMPILER=$(which g++) -DCMAKE_INSTALL_PREFIX=$(pwd)/.install
       script:
@@ -89,6 +83,7 @@ matrix:
           - /c/.hunter
       install: 
         - choco install python python2
+        - choco upgrade cmake
       before_script:
         - cmake -G "Visual Studio 15 2017" -A x64 -B.build -H. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$(pwd)/.install
       script:
