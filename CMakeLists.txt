@@ -52,12 +52,13 @@ find_package(OpenGL QUIET)
 find_package(X11 QUIET)
 find_package(Vulkan QUIET)
 find_package(Python3 QUIET REQUIRED)
-find_package(Git QUIET REQUIRED)
 
 # https://docs.hunter.sh/en/latest/packages/pkg/glfw.html
 hunter_add_package(glfw)
 find_package(glfw3 CONFIG REQUIRED)
 
+hunter_add_package(mattc_glslang)
+hunter_add_package(mattc_SPIRV-Cross)
 hunter_add_package(shaderc)
 find_package(shaderc CONFIG REQUIRED)
 
