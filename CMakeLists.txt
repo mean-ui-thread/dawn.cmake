@@ -19,8 +19,10 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-cmake_minimum_required(VERSION 3.13)
-cmake_policy(SET CMP0076 OLD)
+cmake_minimum_required(VERSION 3.2)
+if(NOT CMAKE_VERSION VERSION_LESS "3.13")
+    cmake_policy(SET CMP0076 OLD)
+endif()
 
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 set(CMAKE_CXX_STANDARD 14)
@@ -36,8 +38,8 @@ if ("${CMAKE_BUILD_TYPE}" STREQUAL "")
 endif()
 
 HunterGate(
-    URL "https://github.com/ruslo/hunter/archive/v0.23.214.tar.gz"
-    SHA1 "e14bc153a7f16d6a5eeec845fb0283c8fad8c358"
+    URL "https://github.com/cpp-pm/hunter/archive/v0.23.216.tar.gz"
+    SHA1 "a492a1879bee60c29f7af17ef56b45f0d7766241"
     LOCAL
 )
 
@@ -52,11 +54,15 @@ find_package(OpenGL QUIET)
 find_package(X11 QUIET)
 find_package(Vulkan QUIET)
 find_package(Python3 QUIET REQUIRED)
-find_package(Git QUIET REQUIRED)
 
 # https://docs.hunter.sh/en/latest/packages/pkg/glfw.html
 hunter_add_package(glfw)
 find_package(glfw3 CONFIG REQUIRED)
+
+hunter_add_package(mattc_glslang)
+hunter_add_package(mattc_SPIRV-Cross)
+hunter_add_package(shaderc)
+find_package(shaderc CONFIG REQUIRED)
 
 if( CMAKE_BUILD_TYPE STREQUAL "Debug" )
     option(DAWN_ENABLE_ASSERTS "Enable assert" ON)
@@ -72,16 +78,6 @@ option(DAWN_ENABLE_BACKEND_VULKAN "Enable Vulkan Backend" ${Vulkan_FOUND})
 option(DAWN_BUILD_SAMPLES "Builds Samples" ON)
 
 set(dawn_root ${PROJECT_SOURCE_DIR}/dawn)
-
-execute_process(
-    COMMAND Git::Git submodule update --init --recursive
-    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
-)
-
-execute_process(
-    COMMAND ${Python3_EXECUTABLE} utils/git-sync-deps
-    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/third_party/shaderc
-)
 
 ################################################################################
 # Compiler flags
@@ -99,22 +95,6 @@ endif()
 # Third-party dependencies needed by dawn_native
 ###############################################################################
 
-# shaderc (includes glslang, SPIRV-Headers, SPIRV-Cross and SPIRV-Tools)
-if (CMAKE_C_FLAGS_${_BUILD_TYPE} MATCHES "/MD")
-    set(SHADERC_ENABLE_SHARED_CRT ON CACHE BOOL "Use the shared CRT instead of the static CRT" FORCE)
-else()
-    set(SHADERC_ENABLE_SHARED_CRT OFF CACHE BOOL "Use the shared CRT instead of the static CRT" FORCE)
-endif()
-set(SHADERC_ENABLE_SPVC ON CACHE BOOL "Enable libshaderc_spvc" FORCE) # for SPIRV-Cross
-option(SHADERC_SKIP_INSTALL "Skip installation" ON)
-option(SHADERC_SKIP_TESTS "Skip building tests" ON)
-option(SPIRV_CROSS_ENABLE_TESTS "Enable SPIRV-Cross tests." OFF)
-option(SPIRV_CROSS_SKIP_INSTALL "Skips installation targets." ON)
-option(SPIRV_SKIP_EXECUTABLES "Skip building the executable and tests along with the library" ON)
-option(SPIRV_SKIP_TESTS "Skip building SPIRV-Tools tests" ON)
-option(ENABLE_GLSLANG_BINARIES "Builds glslangValidator and spirv-remap" OFF)
-add_subdirectory(third_party/shaderc)
-
 # Empty targets to add the include dirs and list the sources of Khronos headers for header inclusion check.
 add_library(khronos_headers_public INTERFACE)
 target_include_directories(khronos_headers_public INTERFACE
@@ -126,7 +106,9 @@ target_include_directories(vulkan_headers_config INTERFACE
     ${dawn_root}/third_party/khronos
 )
 target_compile_definitions(vulkan_headers_config INTERFACE
-    $<$<PLATFORM_ID:Cygwin,MinGW,Windows>:VK_USE_PLATFORM_WIN32_KHR>
+    $<$<PLATFORM_ID:Cygwin>:VK_USE_PLATFORM_WIN32_KHR>
+    $<$<PLATFORM_ID:MinGW>:VK_USE_PLATFORM_WIN32_KHR>
+    $<$<PLATFORM_ID:Windows>:VK_USE_PLATFORM_WIN32_KHR>
     $<$<PLATFORM_ID:Linux>:VK_USE_PLATFORM_XCB_KHR>
     $<$<PLATFORM_ID:Android>:VK_USE_PLATFORM_ANDROID_KHR>
 )
@@ -172,8 +154,9 @@ target_compile_definitions(dawn_internal INTERFACE
     $<$<BOOL:${DAWN_ENABLE_BACKEND_OPENGL}>:DAWN_ENABLE_BACKEND_OPENGL>
     $<$<BOOL:${DAWN_ENABLE_BACKEND_VULKAN}>:DAWN_ENABLE_BACKEND_VULKAN>
     $<$<BOOL:${X11_FOUND}>:DAWN_USE_X11>
-    $<$<PLATFORM_ID:Cygwin,MinGW,Windows>:NOMINMAX>
-    $<$<PLATFORM_ID:Cygwin,MinGW,Windows>:_CRT_SECURE_NO_WARNINGS>
+    $<$<PLATFORM_ID:Cygwin>:NOMINMAX _CRT_SECURE_NO_WARNINGS>
+    $<$<PLATFORM_ID:MinGW>:NOMINMAX _CRT_SECURE_NO_WARNINGS>
+    $<$<PLATFORM_ID:Windows>:NOMINMAX _CRT_SECURE_NO_WARNINGS>
 )
 
 ###############################################################################
@@ -679,10 +662,10 @@ add_library(dawn_native
 target_link_libraries(dawn_native
     PUBLIC
         dawn_common
-        SPIRV-Tools
-        spirv-cross-glsl
-        spirv-cross-hlsl
-        spirv-cross-msl
+        SPIRV-Tools::SPIRV-Tools
+        SPIRV-Cross::spirv-cross-glsl
+        SPIRV-Cross::spirv-cross-hlsl
+        SPIRV-Cross::spirv-cross-msl
     PRIVATE
         $<BUILD_INTERFACE:dawn_native_headers>
         $<BUILD_INTERFACE:dawn_native_sources>
@@ -778,7 +761,9 @@ add_library(dawn_utils STATIC
     dawn/src/utils/TerribleCommandBuffer.cpp
     dawn/src/utils/TerribleCommandBuffer.h
     dawn/src/utils/Timer.h
-    $<$<PLATFORM_ID:Cygwin,MinGW,Windows>:dawn/src/utils/WindowsTimer.cpp>
+    $<$<PLATFORM_ID:Cygwin>:dawn/src/utils/WindowsTimer.cpp>
+    $<$<PLATFORM_ID:MinGW>:dawn/src/utils/WindowsTimer.cpp>
+    $<$<PLATFORM_ID:Windows>:dawn/src/utils/WindowsTimer.cpp>
     $<$<PLATFORM_ID:Darwin>:dawn/src/utils/OSXTimer.cpp>
     $<$<PLATFORM_ID:Linux>:dawn/src/utils/PosixTimer.cpp>
 )
@@ -787,7 +772,7 @@ target_link_libraries(dawn_utils PUBLIC
     dawn_native
     dawn_wire
     dawn_common
-    shaderc
+    shaderc::shaderc
 )
 
 add_library(dawn_bindings STATIC
@@ -868,52 +853,6 @@ configure_package_config_file(
     INSTALL_DESTINATION ${config_install_dir}
 )
 
-##
-# Some targets from shaderc and dependents have absolute build paths in their
-# INTERFACE_INCLUDE_DIRECTORIES. So let's fix that by hiding them from the
-# install package by marking them as BUILD_INTERFACE. This will need to be fixed
-# upstream in :
-#    https://github.com/google/shaderc
-#    https://github.com/KhronosGroup/glslang
-##
-get_property(shaderc_include_directory TARGET shaderc PROPERTY INTERFACE_INCLUDE_DIRECTORIES)
-set_property(TARGET shaderc PROPERTY INTERFACE_INCLUDE_DIRECTORIES $<BUILD_INTERFACE:${shaderc_include_directory}>)
-get_property(glslang_include_directory TARGET glslang PROPERTY INTERFACE_INCLUDE_DIRECTORIES)
-set_property(TARGET glslang PROPERTY INTERFACE_INCLUDE_DIRECTORIES $<BUILD_INTERFACE:${glslang_include_directory}>)
-get_property(shaderc_util_include_directory TARGET shaderc_util PROPERTY INTERFACE_INCLUDE_DIRECTORIES)
-set_property(TARGET shaderc_util PROPERTY INTERFACE_INCLUDE_DIRECTORIES $<BUILD_INTERFACE:${shaderc_util_include_directory}>)
-get_property(spirv_include_directory TARGET SPIRV PROPERTY INTERFACE_INCLUDE_DIRECTORIES)
-set_property(TARGET SPIRV PROPERTY INTERFACE_INCLUDE_DIRECTORIES $<BUILD_INTERFACE:${spirv_include_directory}>)
-
-##
-# Another mistake found in SPIRV-Tools, where their
-# INTERFACE_INCLUDE_DIRECTORIES points to nonexistant
-# ${_IMPORT_PREFIX}/include/include. Because we're not using SPIRV-Tools headers
-# directly (dawn uses it, but users of dawn most likely won't). This will need
-# to be fixed upstream in :
-#     https://github.com/KhronosGroup/SPIRV-Tools
-##
-get_property(SPIRV-Tools_include_directory TARGET SPIRV-Tools PROPERTY INTERFACE_INCLUDE_DIRECTORIES)
-set_property(TARGET SPIRV-Tools PROPERTY INTERFACE_INCLUDE_DIRECTORIES $<BUILD_INTERFACE:${SPIRV-Tools_include_directory}>)
-get_property(SPIRV-Tools-opt_include_directory TARGET SPIRV-Tools-opt PROPERTY INTERFACE_INCLUDE_DIRECTORIES)
-set_property(TARGET SPIRV-Tools-opt PROPERTY INTERFACE_INCLUDE_DIRECTORIES $<BUILD_INTERFACE:${SPIRV-Tools-opt_include_directory}>)
-
-##
-# Similar thing in SPIRV-Cross... INTERFACE_INCLUDE_DIRECTORIES points to
-# nonexistant ${_IMPORT_PREFIX}/include/spirv-cross, most likely happening
-# because we are enabling SPIRV_CROSS_SKIP_INSTALL because it seems to be
-# broken right now. Either way, this will need to be fixed upstream in :
-#     https://github.com/KhronosGroup/SPIRV-Cross
-##
-get_property(spirv-cross-hlsl_include_directory TARGET spirv-cross-hlsl PROPERTY INTERFACE_INCLUDE_DIRECTORIES)
-set_property(TARGET spirv-cross-hlsl PROPERTY INTERFACE_INCLUDE_DIRECTORIES $<BUILD_INTERFACE:${spirv-cross-hlsl_include_directory}>)
-get_property(spirv-cross-msl_include_directory TARGET spirv-cross-msl PROPERTY INTERFACE_INCLUDE_DIRECTORIES)
-set_property(TARGET spirv-cross-msl PROPERTY INTERFACE_INCLUDE_DIRECTORIES $<BUILD_INTERFACE:${spirv-cross-msl_include_directory}>)
-get_property(spirv-cross-glsl_include_directory TARGET spirv-cross-glsl PROPERTY INTERFACE_INCLUDE_DIRECTORIES)
-set_property(TARGET spirv-cross-glsl PROPERTY INTERFACE_INCLUDE_DIRECTORIES $<BUILD_INTERFACE:${spirv-cross-glsl_include_directory}>)
-get_property(spirv-cross-core_include_directory TARGET spirv-cross-core PROPERTY INTERFACE_INCLUDE_DIRECTORIES)
-set_property(TARGET spirv-cross-core PROPERTY INTERFACE_INCLUDE_DIRECTORIES $<BUILD_INTERFACE:${spirv-cross-core_include_directory}>)
-
 install(
     TARGETS
         dawn
@@ -923,19 +862,6 @@ install(
         dawn_native
         dawn_wire
         dawn_common
-        shaderc
-        glslang
-        OSDependent
-        OGLCompiler
-        shaderc_util
-        SPIRV
-        SPIRV-Tools
-        SPIRV-Tools-opt
-        HLSL
-        spirv-cross-hlsl
-        spirv-cross-msl
-        spirv-cross-glsl
-        spirv-cross-core
         ${dawn_samples}
     EXPORT ${TARGETS_EXPORT_NAME}
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}

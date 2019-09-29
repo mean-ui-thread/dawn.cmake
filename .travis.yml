@@ -24,13 +24,8 @@ git:
   submodules: true
   depth: 1
 
-language: minimal
-
 cache:
   timeout: 900
-  directories: 
-    - $HOME/.hunter
-    - $HOME/.linuxbrew
 
 notifications:
   email: false
@@ -40,8 +35,12 @@ matrix:
 
 #    - os: linux
 #      dist: bionic
+#      language: minimal
 #      compiler: clang
 #      env: DAWN_BUILD=linux-bionic-clang
+#      cache:
+#        directories:
+#          - $HOME/.hunter
 #      addons:
 #        apt:
 #          packages:
@@ -49,17 +48,6 @@ matrix:
 #          - libvulkan-dev
 #          - mesa-common-dev
 #          - python2.7
-#          - python3
-#      before_install:
-#        - test -f $HOME/.linuxbrew/bin/brew || git clone https://github.com/Homebrew/brew.git $HOME/.linuxbrew
-#        - PATH="$HOME/.linuxbrew/bin:$PATH"
-#        - echo 'export PATH="$HOME/.linuxbrew/bin:$PATH"' >>~/.bash_profile
-#        - export MANPATH="$(brew --prefix)/share/man:$MANPATH"
-#        - export INFOPATH="$(brew --prefix)/share/info:$INFOPATH"
-#        - brew update
-#      install:
-#        - brew install cmake
-#        - brew cleanup
 #      before_script:
 #        - cmake -B.build -H. -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=$(which clang) -DCMAKE_CXX_COMPILER=$(which clang++) -DCMAKE_INSTALL_PREFIX=$(pwd)/.install
 #      script:
@@ -67,8 +55,12 @@ matrix:
 
     - os: linux
       dist: bionic
+      language: minimal
       compiler: gcc
       env: DAWN_BUILD=linux-bionic-gcc
+      cache:
+        directories:
+          - $HOME/.hunter
       addons:
         apt:
           packages:
@@ -76,17 +68,6 @@ matrix:
           - libvulkan-dev
           - mesa-common-dev
           - python2.7
-          - python3
-      before_install:
-        - test -f $HOME/.linuxbrew/bin/brew || git clone https://github.com/Homebrew/brew.git $HOME/.linuxbrew
-        - PATH="$HOME/.linuxbrew/bin:$PATH"
-        - echo 'export PATH="$HOME/.linuxbrew/bin:$PATH"' >>~/.bash_profile
-        - export MANPATH="$(brew --prefix)/share/man:$MANPATH"
-        - export INFOPATH="$(brew --prefix)/share/info:$INFOPATH"
-        - brew update
-      install:
-        - brew install cmake
-        - brew cleanup
       before_script:
         - cmake -B.build -H. -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=$(which gcc) -DCMAKE_CXX_COMPILER=$(which g++) -DCMAKE_INSTALL_PREFIX=$(pwd)/.install
       script:
@@ -96,12 +77,13 @@ matrix:
       language: cpp
       env: 
         - PATH=/c/Python37:/c/Python37/Scripts:/c/Python27:$PATH
+        - HUNTER_ROOT=/c/.hunter
+      cache:
+        directories:
+          - /c/.hunter
       install: 
-        - choco install cmake python python2
+        - choco install python python2
       before_script:
         - cmake -G "Visual Studio 15 2017" -A x64 -B.build -H. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$(pwd)/.install
       script:
         - cmake --build .build --target install
-      cache:
-        directories:
-          - $HOME/.hunter
