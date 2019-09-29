@@ -106,7 +106,9 @@ target_include_directories(vulkan_headers_config INTERFACE
     ${dawn_root}/third_party/khronos
 )
 target_compile_definitions(vulkan_headers_config INTERFACE
-    $<$<PLATFORM_ID:Cygwin,MinGW,Windows>:VK_USE_PLATFORM_WIN32_KHR>
+    $<$<PLATFORM_ID:Cygwin>:VK_USE_PLATFORM_WIN32_KHR>
+    $<$<PLATFORM_ID:MinGW>:VK_USE_PLATFORM_WIN32_KHR>
+    $<$<PLATFORM_ID:Windows>:VK_USE_PLATFORM_WIN32_KHR>
     $<$<PLATFORM_ID:Linux>:VK_USE_PLATFORM_XCB_KHR>
     $<$<PLATFORM_ID:Android>:VK_USE_PLATFORM_ANDROID_KHR>
 )
@@ -152,8 +154,9 @@ target_compile_definitions(dawn_internal INTERFACE
     $<$<BOOL:${DAWN_ENABLE_BACKEND_OPENGL}>:DAWN_ENABLE_BACKEND_OPENGL>
     $<$<BOOL:${DAWN_ENABLE_BACKEND_VULKAN}>:DAWN_ENABLE_BACKEND_VULKAN>
     $<$<BOOL:${X11_FOUND}>:DAWN_USE_X11>
-    $<$<PLATFORM_ID:Cygwin,MinGW,Windows>:NOMINMAX>
-    $<$<PLATFORM_ID:Cygwin,MinGW,Windows>:_CRT_SECURE_NO_WARNINGS>
+    $<$<PLATFORM_ID:Cygwin>:NOMINMAX _CRT_SECURE_NO_WARNINGS>
+    $<$<PLATFORM_ID:MinGW>:NOMINMAX _CRT_SECURE_NO_WARNINGS>
+    $<$<PLATFORM_ID:Windows>:NOMINMAX _CRT_SECURE_NO_WARNINGS>
 )
 
 ###############################################################################
@@ -758,7 +761,9 @@ add_library(dawn_utils STATIC
     dawn/src/utils/TerribleCommandBuffer.cpp
     dawn/src/utils/TerribleCommandBuffer.h
     dawn/src/utils/Timer.h
-    $<$<PLATFORM_ID:Cygwin,MinGW,Windows>:dawn/src/utils/WindowsTimer.cpp>
+    $<$<PLATFORM_ID:Cygwin>:dawn/src/utils/WindowsTimer.cpp>
+    $<$<PLATFORM_ID:MinGW>:dawn/src/utils/WindowsTimer.cpp>
+    $<$<PLATFORM_ID:Windows>:dawn/src/utils/WindowsTimer.cpp>
     $<$<PLATFORM_ID:Darwin>:dawn/src/utils/OSXTimer.cpp>
     $<$<PLATFORM_ID:Linux>:dawn/src/utils/PosixTimer.cpp>
 )

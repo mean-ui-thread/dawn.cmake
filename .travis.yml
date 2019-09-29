@@ -83,7 +83,6 @@ matrix:
           - /c/.hunter
       install: 
         - choco install python python2
-        - choco upgrade cmake
       before_script:
         - cmake -G "Visual Studio 15 2017" -A x64 -B.build -H. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$(pwd)/.install
       script:
