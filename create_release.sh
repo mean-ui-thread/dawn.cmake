@@ -22,7 +22,7 @@ sha1=$(sha1sum ${current_dir}/source.tar.gz)
 sha1="${sha1%\ *}"
 popd
 
-body="{\"tag_name\": \"${release}\", \"name\": \"${release}\", \"body\":\"If you are using Hunter, add the following to your \`cmake/Hunter/config.cmake\` file:\r\n\r\n\`\`\`\r\nhunter_config(dawn\r\n\tVERSION ${release}\r\n\tURL https://github.com/mchiasson/dawn.cmake/releases/download/${release}/source.arg.gz\r\n\tSHA1 ${sha1}\r\n\tCMAKE_ARGS\r\n\t\tDAWN_BUILD_SAMPLES=OFF\r\n)\r\n\`\`\`\"}"
+body="{\"tag_name\": \"${release}\", \"name\": \"${release}\", \"body\":\"If you are using Hunter, add the following to your \`cmake/Hunter/config.cmake\` file:\r\n\r\n\`\`\`\r\nhunter_config(dawn\r\n\tVERSION ${release}\r\n\tURL https://github.com/mchiasson/dawn.cmake/releases/download/${release}/source.tar.gz\r\n\tSHA1 ${sha1}\r\n\tCMAKE_ARGS\r\n\t\tDAWN_BUILD_SAMPLES=OFF\r\n)\r\n\`\`\`\"}"
 upload_url=$(curl -s -X POST -H "Authorization: token ${GITHUB_ACCESS_TOKEN}" -d "${body}" "https://api.github.com/repos/${USER}/${repo}/releases" | jq -r '.upload_url')
 upload_url="${upload_url%\{*}"
 
