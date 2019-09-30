@@ -86,4 +86,4 @@ matrix:
       before_script:
         - cmake -G "Visual Studio 15 2017" -A x64 -B.build -H. -DCMAKE_BUILD_TYPE=Release -DHUNTER_CONFIGURATION_TYPES=Release -DCMAKE_INSTALL_PREFIX=$(pwd)/.install
       script:
-        - cmake --build .build --target install
+        - cmake --build .build --config Release --target install
