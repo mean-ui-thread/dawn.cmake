@@ -481,6 +481,8 @@ target_sources(dawn_native_sources INTERFACE
         ${dawn_root}/src/dawn_native/d3d12/RenderPipelineD3D12.h
         ${dawn_root}/src/dawn_native/d3d12/ResourceAllocator.cpp
         ${dawn_root}/src/dawn_native/d3d12/ResourceAllocator.h
+        ${dawn_root}/src/dawn_native/d3d12/ResourceAllocatorManagerD3D12.cpp
+        ${dawn_root}/src/dawn_native/d3d12/ResourceAllocatorManagerD3D12.h
         ${dawn_root}/src/dawn_native/d3d12/ResourceHeapD3D12.cpp
         ${dawn_root}/src/dawn_native/d3d12/ResourceHeapD3D12.h
         ${dawn_root}/src/dawn_native/d3d12/SamplerD3D12.cpp

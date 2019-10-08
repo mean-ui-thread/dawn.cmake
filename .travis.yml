@@ -33,25 +33,25 @@ notifications:
 matrix:
   include:
 
-#    - os: linux
-#      dist: bionic
-#      language: minimal
-#      compiler: clang
-#      env: DAWN_BUILD=linux-bionic-clang
-#      cache:
-#        directories:
-#          - $HOME/.hunter
-#      addons:
-#        apt:
-#          packages:
-#          - libgl1-mesa-dev
-#          - libvulkan-dev
-#          - mesa-common-dev
-#          - python2.7
-#      before_script:
-#        - cmake -B.build -H. -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=$(which clang) -DCMAKE_CXX_COMPILER=$(which clang++) -DCMAKE_INSTALL_PREFIX=$(pwd)/.install
-#      script:
-#        - cmake --build .build --target install -- -j$(grep -c ^processor /proc/cpuinfo)
+    - os: linux
+      dist: bionic
+      language: minimal
+      compiler: clang
+      env: DAWN_BUILD=linux-bionic-clang
+      cache:
+        directories:
+          - $HOME/.hunter
+      addons:
+        apt:
+          packages:
+          - libgl1-mesa-dev
+          - libvulkan-dev
+          - mesa-common-dev
+          - python2.7
+      before_script:
+        - cmake -B.build -H. -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=$(which clang) -DCMAKE_CXX_COMPILER=$(which clang++) -DCMAKE_INSTALL_PREFIX=$(pwd)/.install
+      script:
+        - cmake --build .build --target install -- -j$(grep -c ^processor /proc/cpuinfo)
 
     - os: linux
       dist: bionic
