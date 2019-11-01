@@ -38,9 +38,8 @@ if ("${CMAKE_BUILD_TYPE}" STREQUAL "")
 endif()
 
 HunterGate(
-    URL "https://github.com/cpp-pm/hunter/archive/v0.23.216.tar.gz"
-    SHA1 "a492a1879bee60c29f7af17ef56b45f0d7766241"
-    LOCAL
+    URL "https://github.com/cpp-pm/hunter/archive/v0.23.223.tar.gz"
+    SHA1 "44339d35e1a2555525229ef86a2cc21721798d85"
 )
 
 project(dawn)
@@ -59,8 +58,6 @@ find_package(Python3 QUIET REQUIRED)
 hunter_add_package(glfw)
 find_package(glfw3 CONFIG REQUIRED)
 
-hunter_add_package(mattc_glslang)
-hunter_add_package(mattc_SPIRV-Cross)
 hunter_add_package(shaderc)
 find_package(shaderc CONFIG REQUIRED)
 
